@@ -8,6 +8,7 @@
     <string name="edit">Edit</string>
     <string name="home">Home</string>
     <string name="view">View</string>
+    <string name="take_video">Video Recording</string>
     <string name="views_header">You can find bellow the list of elements you are able to view.</string>
     <string name="take_picture">Take a picture</string>
     <string name="use_gps">Use GPS position</string>

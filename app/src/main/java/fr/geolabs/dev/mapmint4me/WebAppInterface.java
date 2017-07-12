@@ -60,6 +60,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 
+
 public class WebAppInterface {
     private boolean mCenter = false;
     private Context mContext;

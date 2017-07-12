@@ -114,6 +114,7 @@
                     }
                 },
                 error: function(){
+                    console.log(arguments);
                     window.Android.showToast("PING FAILED !");
                 }
             });
