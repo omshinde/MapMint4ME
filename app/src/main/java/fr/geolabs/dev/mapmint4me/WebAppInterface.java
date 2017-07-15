@@ -481,6 +481,11 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
+    public void pickupVideo(String id, String cid) {
+        ((MapMint4ME) mContext).invokePickupVideo(id, cid);
+    }
+
+    @JavascriptInterface
     public int getHeight() {
         Display display = ((MapMint4ME) mContext).getWindowManager().getDefaultDisplay();
         Point size = new Point();
