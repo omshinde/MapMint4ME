@@ -123,26 +123,31 @@ body { padding-top: 70px; }
                     glyphicon glyphicon-copyright-mark"
                     aria-hidden="true"></span> About</a></li>
                     <!--
-                    <li> <a href="about.html"><span class="
+                    <li> <a href="contact.html"><span class="
                     glyphicon glyphicon-copyright-mark"
                     aria-hidden="true"></span> About</a></li>
-                    <li> <a href="about.html"><span class="
+                    <li> <a href="help.html"><span class="
                     glyphicon glyphicon-copyright-mark"
                     aria-hidden="true"></span> About</a></li>
                     -->
                 </ul>
             </div><!--/.nav-collapse -->
         </div><!-- /.container-fluid -->
-    </nav>
-    <div class="video-recording">
+    </nav>       
+    <div class="mm4me_content">
         <p>
-            Click the following icon to capture an image or start Video recording.
+            Click the below icon to capture an image or start Video recording.
         </p>
-        <a href="index.html" class="btn btn-circle-lg">
-                <span class="glyphicon glyphicon-camera">
-                </span>
-        </a>
-    </div>            
+        
+        <ul>
+            <li><a class="btn-circle-lg" href="#" onClick="queryCameraForVideo()" />
+                <i class="glyphicon glyphicon-camera" ></i>
+            </li>
+            <li><a class="btn-circle-lg" href="#" onClick="pickupVideo()" />
+                <i class="glyphicon glyphicon-film" ></i>  
+            </li>
+        </ul>      
+    </div>
 
 </div> <!-- /container -->
 
@@ -155,12 +160,21 @@ body { padding-top: 70px; }
 <script src="js/summernote.min.js"></script>
 <script src="scripts/generic.js"></script>
 <script type="text/javascript">
+
+    //function queryCameraForVideo() {
+      //  window.Android.queryCameraForVideo();
+    //}
+
+    //function pickupVideo() {
+      //  window.Android.pickupVideo();
+    //}
+
     try{
       //replacing default localstorage with our Android database
     	window.localStorage=LocalStorage;
     }catch(e){
       //If LocalStorage class was not found , make it sure to add it to the webView
-        console.log("LocalStorage ERROR : can't find android        	class LocalStorage. Switching to raw localstorage")
+        console.log("LocalStorage ERROR : can't find android class LocalStorage. Switching to raw localstorage")
     }
 
     $(function) {
@@ -186,7 +200,7 @@ body { padding-top: 70px; }
     	});
     	$.ajax({
     		method: "GET",
-    		url: './scripts/' + (tmp[tmp.lebgth-1].replace(/html
+    		url: './scripts/' + (tmp[tmp.length-1].replace(/html
     			/g,"js")),
     		error: function(data){
     			console.log("Nothing to run after");

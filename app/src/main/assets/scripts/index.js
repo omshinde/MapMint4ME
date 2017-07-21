@@ -6,7 +6,8 @@ var translatedStrings=[
         "edit",
         "view",
         "export",
-        "map"
+        "map",
+        "camera"
     ];
     var cnt=0;
 $(".col-xs-6").each(function(){

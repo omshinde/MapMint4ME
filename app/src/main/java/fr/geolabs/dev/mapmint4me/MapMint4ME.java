@@ -188,6 +188,7 @@ public class MapMint4ME extends Activity implements
             webSettings.setDatabaseEnabled(true);
             webSettings.setJavaScriptEnabled(true);
             webSettings.setDomStorageEnabled(true);
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mCookieManager.setAcceptThirdPartyCookies(myWebView, true);
             }
@@ -645,13 +646,13 @@ public class MapMint4ME extends Activity implements
     static final int REQUEST_TAKE_VIDEO = 1223;
     static final int PICK_VIDEO = 1224;
 
-    public void invokeCameraForVideo(String id, String cid) {
+    public void invokeCameraForVideo() {
         Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
 
         //Ensure that there's a camera activity to handle the intent
         if (takeVideoIntent.resolveActivity(getPackageManager()) != null){
 
-            // Create the file where video should be stored
+            /*// Create the file where video should be stored
             File videoFile = null;
             try {
                 videoFile = createVideoFile();
@@ -673,15 +674,15 @@ public class MapMint4ME extends Activity implements
                     getApplicationContext().grantUriPermission(packageName, videoURI, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 }
                 takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT, videoURI);
-                cameraVideoId = id;
-                cameraVideoCid = cid;
-                cameraVideoName = videoURI.toString();
+                //cameraVideoId = id;
+                //cameraVideoCid = cid;
+                cameraVideoName = videoURI.toString();*/
                 startActivityForResult(takeVideoIntent, REQUEST_TAKE_VIDEO);
-            }
+            //}
         }
     }
 
-    public void invokePickupVideo(String id, String cid) {
+    public void invokePickupVideo() {
         Intent getVideoIntent = new Intent(Intent.ACTION_GET_CONTENT);
         getVideoIntent.setType("video/*");
 
@@ -691,10 +692,10 @@ public class MapMint4ME extends Activity implements
         Intent chooserVideoIntent = Intent.createChooser(getVideoIntent, "Select Video");
         chooserVideoIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{pickVideoIntent});
 
-        cameraVideoId = id;
-        cameraVideoCid = cid;
+        //cameraVideoId = id;
+        //cameraVideoCid = cid;
 
-        List<ResolveInfo> resInfoList = getPackageManager().queryIntentActivities(pickVideoIntent, PackageManager.MATCH_DEFAULT_ONLY);
+        /*List<ResolveInfo> resInfoList = getPackageManager().queryIntentActivities(pickVideoIntent, PackageManager.MATCH_DEFAULT_ONLY);
         for (ResolveInfo resolveInfo : resInfoList) {
             String packageName = resolveInfo.activityInfo.packageName;
             //Toast.makeText(getApplicationContext(), "Authorize Package 1 : " + packageName, Toast.LENGTH_LONG).show();
@@ -707,7 +708,7 @@ public class MapMint4ME extends Activity implements
                     ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_READ_VIDEO);
                 }
             }
-        }
+        }*/
         startActivityForResult(chooserVideoIntent, PICK_VIDEO);
     }
 

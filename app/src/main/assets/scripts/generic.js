@@ -1245,3 +1245,11 @@ function addStatusControl(){
         '</span>'+
         '</span>');
 }
+
+function queryCameraForVideo() {
+    window.Android.queryCameraForVideo();
+}
+
+function pickupVideo() {
+    window.Android.pickupVideo();
+}
