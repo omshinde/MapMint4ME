@@ -491,6 +491,16 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
+    public void startAudioRecord(boolean start) {
+        ((MapMint4ME) mContext).onAudioRecord(start);
+    }
+
+    @JavascriptInterface
+    public void playAudioRecord(boolean start) {
+        ((MapMint4ME) mContext).onPlay(start);
+    }
+
+    @JavascriptInterface
     public int getHeight() {
         Display display = ((MapMint4ME) mContext).getWindowManager().getDefaultDisplay();
         Point size = new Point();

@@ -7,7 +7,8 @@ var translatedStrings=[
         "view",
         "export",
         "map",
-        "camera"
+        "camera",
+        "audio"
     ];
     var cnt=0;
 $(".col-xs-6").each(function(){

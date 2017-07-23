@@ -712,10 +712,70 @@ public class MapMint4ME extends Activity implements
         startActivityForResult(chooserVideoIntent, PICK_VIDEO);
     }
 
+    private static String mFileName = null;
+    private MediaRecorder mAudioRecorder = null;
+    private MediaPlayer mPlayer = null;
+
+    public void onAudioRecord(boolean start) {
+        if (start) {
+            startRecording();
+        } else {
+            stopRecording();
+        }
+    }
+
+    public void onPlay(boolean start) {
+        if (start) {
+            startPlaying();
+        } else {
+            stopPlaying();
+        }
+    }
+
+    public void startRecording() {
+        mAudioRecorder = new MediaRecorder();
+        mAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+        mAudioRecorder.setOutputFile(mFileName);
+        mAudioRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+
+        try {
+            mAudioRecorder.prepare();
+        } catch (IOException e) {
+            Log.e(TAG, "Couldn't Prepare Record, prepare() failed");
+        }
+
+        mAudioRecorder.start();
+    }
+
+    public void stopRecording() {
+        mAudioRecorder.stop();
+        mAudioRecorder.release();
+        mAudioRecorder = null;
+
+    }
+
+    public void startPlaying() {
+        mPlayer = new MediaPlayer();
+        try {
+            mPlayer.setDataSource(mFileName);
+            mPlayer.prepare();
+            mPlayer.start();
+        } catch (IOException e) {
+            Log.e(TAG, "Couldn't Prepare Record, prepare() failed");
+        }
+
+    }
+
+    public void stopPlaying() {
+        mPlayer.release();
+        mPlayer = null;
+    }
+
     public static final int MY_PERMISSIONS_REQUEST_READ_MEDIA = 1233456666;
     public static final int MY_PERMISSIONS_REQUEST_GPS = 1233456667;
     public static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 1233456668;
-    public static final int MY_PERMISSIONS_REQUEST_READ_VIDEO = 1233456669;
+    //public static final int MY_PERMISSIONS_REQUEST_READ_VIDEO = 1233456669;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
@@ -742,50 +802,6 @@ public class MapMint4ME extends Activity implements
             //     break;
             default:
                 break;
-        }
-    }
-    
-    private static String mFileName = null;
-    private MediaRecorder mAudioRecorder = null;
-    private MediaPlayer mPlayer = null;
-
-    private void onAudioRecord(boolean start) {
-        if (start) {
-            mAudioRecorder = new MediaRecorder();
-            mAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            mAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            mAudioRecorder.setOutputFile(mFileName);
-            mAudioRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-
-            try {
-                mAudioRecorder.prepare();
-            } catch (IOException e) {
-                Log.e(TAG, "Couldn't Prepare Record, prepare() failed");
-            }
-
-            mAudioRecorder.start();
-        } 
-        else {
-            mAudioRecorder.stop();
-            mAudioRecorder.release();
-            mAudioRecorder = null;
-        }
-    }
-
-    private void onPlay(boolean start) {
-        if (start) {
-            mPlayer = new MediaPlayer();
-            try {
-                mPlayer.setDataSource(mFileName);
-                mPlayer.prepare();
-                mPlayer.start();
-            } catch (IOException e) {
-                Log.e(TAG, "Couldn't Prepare Record, prepare() failed");
-            }
-        }
-        else {
-            mPlayer.release();
-            mPlayer = null;
         }
     }
 }
