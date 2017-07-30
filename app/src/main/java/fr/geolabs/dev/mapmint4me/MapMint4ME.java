@@ -717,7 +717,7 @@ public class MapMint4ME extends Activity implements
     private MediaPlayer mPlayer = null;
 
     public void onAudioRecord(boolean start) {
-        if (start) {
+        if (start == true) {
             startRecording();
         } else {
             stopRecording();
@@ -725,7 +725,7 @@ public class MapMint4ME extends Activity implements
     }
 
     public void onPlay(boolean start) {
-        if (start) {
+        if (start == true) {
             startPlaying();
         } else {
             stopPlaying();
@@ -749,10 +749,11 @@ public class MapMint4ME extends Activity implements
     }
 
     public void stopRecording() {
-        mAudioRecorder.stop();
-        mAudioRecorder.release();
-        mAudioRecorder = null;
-
+        if(mAudioRecorder != null){
+            mAudioRecorder.stop();
+            mAudioRecorder.release();
+            mAudioRecorder = null;
+        }
     }
 
     public void startPlaying() {
@@ -768,8 +769,10 @@ public class MapMint4ME extends Activity implements
     }
 
     public void stopPlaying() {
-        mPlayer.release();
-        mPlayer = null;
+        if(mPlayer != null) {
+            mPlayer.release();
+            mPlayer = null;
+        }
     }
 
     public static final int MY_PERMISSIONS_REQUEST_READ_MEDIA = 1233456666;
