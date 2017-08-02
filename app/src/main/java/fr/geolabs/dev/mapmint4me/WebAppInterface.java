@@ -481,13 +481,13 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
-    public void pickupVideo() {
-        ((MapMint4ME) mContext).invokePickupVideo();
+    public void pickupVideo(String id, String cid) {
+        ((MapMint4ME) mContext).invokePickupVideo(id, cid);
     }
 
     @JavascriptInterface
-    public void queryCameraForVideo() {
-        ((MapMint4ME) mContext).invokeCameraForVideo();
+    public void queryCameraForVideo(String id, String cid) {
+        ((MapMint4ME) mContext).invokeCameraForVideo(id, cid);
     }
 
     @JavascriptInterface

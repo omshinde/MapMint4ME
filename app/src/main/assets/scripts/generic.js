@@ -164,6 +164,19 @@ function loadNewPicture(cid,id,picture){
     });
 }
 
+/*****************************************************************************
+ * Display an HTML part containing the video recorded by Camera or picked from
+ *the photo library. (Added in August 2017)
+ *****************************************************************************/
+ function loadNewVideo(cid,id,video){
+    $(".tab-pane").each(function(){
+        if($(this).is(":visible"))
+          $(this).find("#value_"+id)
+                .html('<video height="auto" type="video/mp4" src="'+video+'" title="'+
+                         window.Android.translate('video')+'" width="100%" />');  
+    });
+ }
+
 
 /*****************************************************************************
  * Create a JSON Object representing the dependency values.
@@ -225,7 +238,12 @@ function printCurrentType(obj,cid){
                         '     <li><a href="#"  onclick="window.Android.pickupImage('+obj["id"]+','+cid+');"><i class="glyphicon glyphicon-picture"></i> '+window.Android.translate("choose_picture")+'</a></li>'+
                         '     <li role="separator" class="divider"></li>'+
                         '     <li><a href="#" onclick="window.Android.queryCamera('+obj["id"]+','+cid+');"><i class="glyphicon glyphicon-camera"></i> '+window.Android.translate("take_picture")+'</a></li>'+
-                        '   </ul>'+
+                        '     <li role="separator" class="divider"></li>'+
+                        //  The Video recording and Video Picker facility is added in August 2017.
+                        '      <li><a href="#" onclick="window.Android.pickupVideo('+obj["id"]+','+cid+');"><i class="glyphicon glyphicon-film"></i> '+window.Android.translate("choose_video")+'</a></li>'+
+                        '      <li role="separator" class="divider"></li>'+
+                        '      <li><a href="#" onclick="window.Android.queryCameraForVideo('+obj["id"]+','+cid+');"><i class="glyphicon glyphicon-camera"></i> '+window.Android.translate("take_video")+'</a></li>'+
+                        '    </ul>'+
                         '</div> <div id="value_'+obj["id"]+'"></div>';
                 console.log(tmpStr);
                 return tmpStr;

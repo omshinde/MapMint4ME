@@ -456,7 +456,7 @@ public class MapMint4ME extends Activity implements
                     File asset_dir = new File(getFilesDir() + File.separator + "data");
                     File myOutputFile=createImageFile();
                     Uri outputURI = FileProvider.getUriForFile(getApplicationContext(),
-                            "fr.geolabs.dev.fileprovider",
+                            "fr.geolabs.dev.mapmint4me.fileprovider",
                             myOutputFile);
                     cameraPictureName = outputURI.toString();
                     FileOutputStream fos = new FileOutputStream(myOutputFile);
@@ -484,7 +484,7 @@ public class MapMint4ME extends Activity implements
 
         if (requestCode == REQUEST_TAKE_VIDEO) {
             if (resultCode == Activity.RESULT_OK)
-                myWebView.loadUrl("javascript:loadNewPicture('" + cameraVideoCid + "','" + cameraVideoId + "','" + cameraVideoName + "');");
+                myWebView.loadUrl("javascript:loadNewVideo('" + cameraVideoCid + "','" + cameraVideoId + "','" + cameraVideoName + "');");
             else {
                 myWebView.loadUrl("javascript:console.log('error ! " + data.getData() + "');");
             }
@@ -496,7 +496,7 @@ public class MapMint4ME extends Activity implements
                     File asset_dir = new File(getFilesDir() + File.separator + "data");
                     File myOutputFile=createVideoFile();
                     Uri outputURI = FileProvider.getUriForFile(getApplicationContext(),
-                            "fr.geolabs.dev.fileprovider",
+                            "fr.geolabs.dev.mapmint4me.fileprovider",
                             myOutputFile);
                     cameraVideoName = outputURI.toString();
                     FileOutputStream fos = new FileOutputStream(myOutputFile);
@@ -511,7 +511,7 @@ public class MapMint4ME extends Activity implements
                     fos.close();
                     bout.close();
                     in.close();
-                    myWebView.loadUrl("javascript:loadNewPicture('" + cameraVideoCid + "','" + cameraVideoId + "','" + cameraVideoName + "');");
+                    myWebView.loadUrl("javascript:loadNewVideo('" + cameraVideoCid + "','" + cameraVideoId + "','" + cameraVideoName + "');");
                 } catch (Exception e) {
                     Toast.makeText(getApplicationContext(), "Error : " + e, Toast.LENGTH_LONG).show();
                     myWebView.loadUrl("javascript:console.log('" + e + "');");
@@ -565,7 +565,7 @@ public class MapMint4ME extends Activity implements
             // Continue only if the File was successfully created
             if (photoFile != null) {
                 Uri photoURI = FileProvider.getUriForFile(getApplicationContext(),
-                        "fr.geolabs.dev.fileprovider",
+                        "fr.geolabs.dev.mapmint4me.fileprovider",
                         photoFile);
                 //takePictureIntent.setData(photoURI);
                 takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -632,7 +632,7 @@ public class MapMint4ME extends Activity implements
         // Create a video file
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String videoFileName = "VID_" + timeStamp + ".mp4";
-        File storageDir = new File(getFilesDir(), "Android/data/fr.geolabs.dev.mapmint4me/files/Video");
+        File storageDir = new File(getFilesDir(), "Android/data/fr.geolabs.dev.mapmint4me/files/Videos");
 
         //Create directories in case they do not exist
         if(!storageDir.exists()) storageDir.mkdirs();
@@ -646,13 +646,13 @@ public class MapMint4ME extends Activity implements
     static final int REQUEST_TAKE_VIDEO = 1223;
     static final int PICK_VIDEO = 1224;
 
-    public void invokeCameraForVideo() {
+    public void invokeCameraForVideo(String id, String cid) {
         Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
 
         //Ensure that there's a camera activity to handle the intent
         if (takeVideoIntent.resolveActivity(getPackageManager()) != null){
 
-            /*// Create the file where video should be stored
+            // Create the file where video should be stored
             File videoFile = null;
             try {
                 videoFile = createVideoFile();
@@ -663,7 +663,7 @@ public class MapMint4ME extends Activity implements
             }
             // Continue only if the File was successfully created
             if (videoFile != null) {
-                Uri videoURI = FileProvider.getUriForFile(getApplicationContext(), "fr.geolabs.dev.fileProvider", videoFile);
+                Uri videoURI = FileProvider.getUriForFile(getApplicationContext(), "fr.geolabs.dev.mapmint4me.fileprovider", videoFile);
                 takeVideoIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 String packageName0 = takeVideoIntent.getPackage();
                 Toast.makeText(getBaseContext(), "Authorize Package 0 : " + packageName0, Toast.LENGTH_SHORT).show();
@@ -674,15 +674,15 @@ public class MapMint4ME extends Activity implements
                     getApplicationContext().grantUriPermission(packageName, videoURI, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 }
                 takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT, videoURI);
-                //cameraVideoId = id;
-                //cameraVideoCid = cid;
-                cameraVideoName = videoURI.toString();*/
+                cameraVideoId = id;
+                cameraVideoCid = cid;
+                cameraVideoName = videoURI.toString();
                 startActivityForResult(takeVideoIntent, REQUEST_TAKE_VIDEO);
-            //}
+            }
         }
     }
 
-    public void invokePickupVideo() {
+    public void invokePickupVideo(String id, String cid) {
         Intent getVideoIntent = new Intent(Intent.ACTION_GET_CONTENT);
         getVideoIntent.setType("video/*");
 
@@ -692,10 +692,10 @@ public class MapMint4ME extends Activity implements
         Intent chooserVideoIntent = Intent.createChooser(getVideoIntent, "Select Video");
         chooserVideoIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{pickVideoIntent});
 
-        //cameraVideoId = id;
-        //cameraVideoCid = cid;
+        cameraVideoId = id;
+        cameraVideoCid = cid;
 
-        /*List<ResolveInfo> resInfoList = getPackageManager().queryIntentActivities(pickVideoIntent, PackageManager.MATCH_DEFAULT_ONLY);
+        List<ResolveInfo> resInfoList = getPackageManager().queryIntentActivities(pickVideoIntent, PackageManager.MATCH_DEFAULT_ONLY);
         for (ResolveInfo resolveInfo : resInfoList) {
             String packageName = resolveInfo.activityInfo.packageName;
             //Toast.makeText(getApplicationContext(), "Authorize Package 1 : " + packageName, Toast.LENGTH_LONG).show();
@@ -705,10 +705,10 @@ public class MapMint4ME extends Activity implements
                 int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
                 if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_READ_VIDEO);
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_READ_MEDIA);
                 }
             }
-        }*/
+        }
         startActivityForResult(chooserVideoIntent, PICK_VIDEO);
     }
 

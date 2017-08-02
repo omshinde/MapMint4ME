@@ -23,6 +23,7 @@
 
 
     <uses-feature android:name="android.hardware.camera2" android:required="false" />
+    
     <uses-feature android:name="android.hardware.bluetooth" android:required="false"/>
 
     <supports-screens android:anyDensity="false"/>
@@ -50,7 +51,7 @@
         </activity>
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="fr.geolabs.dev.fileprovider"
+            android:authorities="fr.geolabs.dev.mapmint4me.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

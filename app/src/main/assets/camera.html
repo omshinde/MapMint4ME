@@ -183,6 +183,7 @@ body { padding-top: 70px; }
     	getCurrentStatus();
     	var tmp=document.location+"";
     	tmp = tmp.split("/");
+        console.log(tmp);
     	$.ajax({
     		method: "GET",
     		url: './content/' + tmp[tmp.length-1],
