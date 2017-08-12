@@ -551,8 +551,8 @@ function runUpdateQuery(obj,mid,func){
     for(var i in editSchema[mid]){
         for(var j in editSchema[mid][i]){
             if(editSchema[mid][i][j]["ftype"]==EDITION_TYPE_FILE){
-                queryAttr.push(editSchema[mid][i][j]["name"]);
-                queryValues0.push("?");
+                //queryAttr.push(editSchema[mid][i][j]["name"]);
+                query+=(lcnt>0?", ":"")+editSchema[mid][i][j]["name"]+"=?";
                 queryTypes.push(parseInt(editSchema[mid][i][j]["ftype"]));
                 //To differentiate amongst Image and Video
                 if($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("video").attr("src")==undefined){
