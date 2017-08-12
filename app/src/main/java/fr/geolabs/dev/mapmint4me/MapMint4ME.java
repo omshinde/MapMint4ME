@@ -76,6 +76,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
+import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO;
 import static java.lang.Thread.sleep;
 
 /**
@@ -186,6 +187,8 @@ public class MapMint4ME extends Activity implements
             webSettings.setGeolocationEnabled(true);
             webSettings.setAppCacheEnabled(true);
             webSettings.setDatabaseEnabled(true);
+            webSettings.setAllowFileAccess(true);
+            webSettings.setAllowFileAccessFromFileURLs(true);
             webSettings.setJavaScriptEnabled(true);
             webSettings.setDomStorageEnabled(true);
 
@@ -511,6 +514,7 @@ public class MapMint4ME extends Activity implements
                     fos.close();
                     bout.close();
                     in.close();
+                    System.out.println(data1);
                     myWebView.loadUrl("javascript:loadNewVideo('" + cameraVideoCid + "','" + cameraVideoId + "','" + cameraVideoName + "');");
                 } catch (Exception e) {
                     Toast.makeText(getApplicationContext(), "Error : " + e, Toast.LENGTH_LONG).show();
@@ -543,6 +547,7 @@ public class MapMint4ME extends Activity implements
 
         // Save a file: path for use with ACTION_VIEW intents
         mCurrentPhotoPath = "file:" + image.getAbsolutePath();
+        //Toast.makeText(getApplicationContext(), mCurrentPhotoPath, Toast.LENGTH_LONG).show();
         return image;
     }
 
@@ -640,6 +645,7 @@ public class MapMint4ME extends Activity implements
 
         //Save the file: path required for use with ACTION_VIEW intents
         mCurrentVideoPath = "file:" + video.getAbsolutePath();
+        //Toast.makeText(getApplicationContext(), mCurrentVideoPath, Toast.LENGTH_LONG).show();
         return video;
     }
 

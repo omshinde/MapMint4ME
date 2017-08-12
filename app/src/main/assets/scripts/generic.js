@@ -168,11 +168,11 @@ function loadNewPicture(cid,id,picture){
  * Display an HTML part containing the video recorded by Camera or picked from
  *the photo library. (Added in August 2017)
  *****************************************************************************/
- function loadNewVideo(cid,id,video){
+function loadNewVideo(cid,id,video){
     $(".tab-pane").each(function(){
         if($(this).is(":visible"))
           $(this).find("#value_"+id)
-                .html('<video height="auto" type="video/mp4" src="'+video+'" title="'+
+                .html('<video height="auto" type=video/mp4 src="'+video+'" title="'+
                          window.Android.translate('video')+'" width="100%" />');  
     });
  }
@@ -471,7 +471,13 @@ function runInsertQuery(obj,mid,func){
                 queryAttr.push(editSchema[mid][i][j]["name"]);
                 queryValues0.push("?");
                 queryTypes.push(parseInt(editSchema[mid][i][j]["ftype"]));
-                queryValues.push($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src"));
+                //To differentiate amongst Image and Video
+                if($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("video").attr("src")==undefined){
+                    queryValues.push($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src"));
+                }
+                else if($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src")==undefined){
+                    queryValues.push($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("video").attr("src"));
+                }
                 //subquery+=",readfile('"+$(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src")+"')";
             }
         }
@@ -545,11 +551,16 @@ function runUpdateQuery(obj,mid,func){
     for(var i in editSchema[mid]){
         for(var j in editSchema[mid][i]){
             if(editSchema[mid][i][j]["ftype"]==EDITION_TYPE_FILE){
-                //queryAttr.push(editSchema[mid][i][j]["name"]);
-                query+=(lcnt>0?", ":"")+editSchema[mid][i][j]["name"]+"=?";
+                queryAttr.push(editSchema[mid][i][j]["name"]);
+                queryValues0.push("?");
                 queryTypes.push(parseInt(editSchema[mid][i][j]["ftype"]));
-                queryValues.push($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src"));
-                //subquery+=",readfile('"+$(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src")+"')";
+                //To differentiate amongst Image and Video
+                if($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("video").attr("src")==undefined){
+                    queryValues.push($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src"));
+                }
+                else if($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src")==undefined){
+                    queryValues.push($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("video").attr("src"));
+                }
                 lcnt+=1;
             }
         }
@@ -1262,14 +1273,6 @@ function addStatusControl(){
         '</ul>'+
         '</span>'+
         '</span>');
-}
-
-function queryCameraForVideo() {
-    window.Android.queryCameraForVideo();
-}
-
-function pickupVideo() {
-    window.Android.pickupVideo();
 }
 
 function startAudioRecord(start) {
