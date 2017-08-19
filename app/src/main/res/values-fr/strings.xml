@@ -8,7 +8,6 @@
     <string name="save">Enregistrer</string>
     <string name="table">Table</string>
     <string name="view">Voir</string>
-    <string name="video">Enregistrement video</string>
     <string name="views_header">Vous trouverez ci-dessous la liste des éléments que vous pouvez consulter.</string>
     <string name="take_picture">Prendre une photo</string>
     <string name="use_gps">Utiliser la position GPS</string>
@@ -47,4 +46,9 @@
     <string name="noserver_btn">Ajouter un serveur</string>
     <string name="map">Carte</string>
     <string name="no_gps">Pas de position GPS</string>
+    <string name="import_reading">Importer une lecture</string>
+    <string name="take_video">Enregistrer une vidéo</string>
+    <string name="select_sos_readings">Prenez des lectures de SOS</string>
+    <string name="choose_video">Sélectionnez une vidéo existante</string>
+    <string name="video">Enregistrement video</string>
 </resources>

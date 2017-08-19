@@ -52,6 +52,9 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -68,12 +71,15 @@ import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.UUID;
+import java.*;
 
 import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
 import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO;
@@ -342,7 +348,7 @@ public class MapMint4ME extends Activity implements
      * This class is used as a substitution of the local storage in Android webviews
      */
     private class LocalStorageJavaScriptInterface {
-        private Context mContext;
+        public Context mContext;
         private LocalStorage localStorageDBHelper;
         private SQLiteDatabase database;
 
@@ -514,7 +520,6 @@ public class MapMint4ME extends Activity implements
                     fos.close();
                     bout.close();
                     in.close();
-                    System.out.println(data1);
                     myWebView.loadUrl("javascript:loadNewVideo('" + cameraVideoCid + "','" + cameraVideoId + "','" + cameraVideoName + "');");
                 } catch (Exception e) {
                     Toast.makeText(getApplicationContext(), "Error : " + e, Toast.LENGTH_LONG).show();
@@ -526,6 +531,27 @@ public class MapMint4ME extends Activity implements
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    /***************************************************************
+     * Calls the GetSos.getSos() function. Sends the data for publishing
+     * on the app.
+     * @param id, data
+     * Added in August 2017 for SOS input support.
+     ******************************************************************/
+    public void callGetSos(final String id) throws IOException {
+        final String data;
+        GetSos sos;
+        sos = new GetSos();
+        data = sos.getSos(id);
+        System.out.println(data);
+        myWebView.post(new Runnable() {
+            @Override
+            public void run() {
+                myWebView.loadUrl("javascript:loadSosData('" + id + "','" + data + "');");
+            }
+        });
+
     }
 
     String cameraPictureId = null;
@@ -633,6 +659,11 @@ public class MapMint4ME extends Activity implements
     String cameraVideoName = null;
     String mCurrentVideoPath;
 
+    /***************************************************************
+     * Creates a video file to store the video captured.
+     * Added in August 2017 for Audio/Video input support.
+     ******************************************************************/
+
     private File createVideoFile() throws IOException {
         // Create a video file
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -651,6 +682,12 @@ public class MapMint4ME extends Activity implements
 
     static final int REQUEST_TAKE_VIDEO = 1223;
     static final int PICK_VIDEO = 1224;
+
+    /***************************************************************
+     * Creates and Calls the intent for capturing video.
+     * @param id, cid
+     * Added in August 2017 for Audio/Video input support.
+     ******************************************************************/
 
     public void invokeCameraForVideo(String id, String cid) {
         Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
@@ -688,6 +725,11 @@ public class MapMint4ME extends Activity implements
         }
     }
 
+    /***************************************************************
+     * Creates and calls the intent for choosing an existing video file
+     * @param id, cid
+     * Added in August 2017 for Audio/Video input support.
+     ******************************************************************/
     public void invokePickupVideo(String id, String cid) {
         Intent getVideoIntent = new Intent(Intent.ACTION_GET_CONTENT);
         getVideoIntent.setType("video/*");
@@ -718,73 +760,8 @@ public class MapMint4ME extends Activity implements
         startActivityForResult(chooserVideoIntent, PICK_VIDEO);
     }
 
-    private static String mFileName = null;
-    private MediaRecorder mAudioRecorder = null;
-    private MediaPlayer mPlayer = null;
-
-    public void onAudioRecord(boolean start) {
-        if (start == true) {
-            startRecording();
-        } else {
-            stopRecording();
-        }
-    }
-
-    public void onPlay(boolean start) {
-        if (start == true) {
-            startPlaying();
-        } else {
-            stopPlaying();
-        }
-    }
-
-    public void startRecording() {
-        mAudioRecorder = new MediaRecorder();
-        mAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        mAudioRecorder.setOutputFile(mFileName);
-        mAudioRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
-
-        try {
-            mAudioRecorder.prepare();
-        } catch (IOException e) {
-            Log.e(TAG, "Couldn't Prepare Record, prepare() failed");
-        }
-
-        mAudioRecorder.start();
-    }
-
-    public void stopRecording() {
-        if(mAudioRecorder != null){
-            mAudioRecorder.stop();
-            mAudioRecorder.release();
-            mAudioRecorder = null;
-        }
-    }
-
-    public void startPlaying() {
-        mPlayer = new MediaPlayer();
-        try {
-            mPlayer.setDataSource(mFileName);
-            mPlayer.prepare();
-            mPlayer.start();
-        } catch (IOException e) {
-            Log.e(TAG, "Couldn't Prepare Record, prepare() failed");
-        }
-
-    }
-
-    public void stopPlaying() {
-        if(mPlayer != null) {
-            mPlayer.release();
-            mPlayer = null;
-        }
-    }
-
     public static final int MY_PERMISSIONS_REQUEST_READ_MEDIA = 1233456666;
     public static final int MY_PERMISSIONS_REQUEST_GPS = 1233456667;
-    public static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 1233456668;
-    //public static final int MY_PERMISSIONS_REQUEST_READ_VIDEO = 1233456669;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
@@ -799,16 +776,6 @@ public class MapMint4ME extends Activity implements
                     Log.d(TAG, "Allowed to access the gps!!");
                 }
                 break;
-            case MY_PERMISSIONS_REQUEST_RECORD_AUDIO:
-                if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    Log.d(TAG, "Allowed to access the Audio recorder!!");
-                }
-                break;
-            // case MY_PERMISSIONS_REQUEST_RECORD_VIDEO:
-            //     if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-            //         Log.d(TAG, "Allowed to access the Video recorder!!");
-            //     }
-            //     break;
             default:
                 break;
         }

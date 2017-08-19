@@ -163,10 +163,25 @@ function loadNewPicture(cid,id,picture){
                         window.Android.translate('image')+'" width="100%" />');
     });
 }
+/*****************************************************************************
+ *Display an HTML part containing the data obtained by SOS.
+ * Added in August 2017 for Audio/ Video support
+ ****************************************************************************/
+ function loadSosData(id, data){
+    $(".tab-pane").each(function(){
+        if($(this).is(":visible"))
+         $(this).find("#value_"+id)
+                //.html('<img class="img-responsive" src="'+picture+'" title="'+
+                //        window.Android.translate('image')+'" width="100%" />')
+                .html('<textarea id="sos_data_view" class="form-control" name="field_'+id+'">'+
+                        data+'</textarea>');
+    });
+ }
 
 /*****************************************************************************
  * Display an HTML part containing the video recorded by Camera or picked from
- *the photo library. (Added in August 2017)
+ *the photo library.
+ * Added in August 2017 for Audio/ Video support
  *****************************************************************************/
 function loadNewVideo(cid,id,video){
     $(".tab-pane").each(function(){
@@ -239,7 +254,7 @@ function printCurrentType(obj,cid){
                         '     <li role="separator" class="divider"></li>'+
                         '     <li><a href="#" onclick="window.Android.queryCamera('+obj["id"]+','+cid+');"><i class="glyphicon glyphicon-camera"></i> '+window.Android.translate("take_picture")+'</a></li>'+
                         '     <li role="separator" class="divider"></li>'+
-                        //  The Video recording and Video Picker facility is added in August 2017.
+                        //  The Video recording and Video Picker facility is added in August 2017
                         '      <li><a href="#" onclick="window.Android.pickupVideo('+obj["id"]+','+cid+');"><i class="glyphicon glyphicon-film"></i> '+window.Android.translate("choose_video")+'</a></li>'+
                         '      <li role="separator" class="divider"></li>'+
                         '      <li><a href="#" onclick="window.Android.queryCameraForVideo('+obj["id"]+','+cid+');"><i class="glyphicon glyphicon-camera"></i> '+window.Android.translate("take_video")+'</a></li>'+
@@ -377,8 +392,25 @@ function printCurrentType(obj,cid){
             }
             if(definedSqlTypes[i]["code"]=="html")
                 return '<textarea class="swagEditor" name="field_'+obj["id"]+'">'+obj["value"]+'</textarea>';
-            if(definedSqlTypes[i]["code"]=="text")
-                return '<textarea class="form-control" name="field_'+obj["id"]+'">'+obj["value"]+'</textarea>';
+            if(definedSqlTypes[i]["code"]=="text"){
+                //Added to generic.js in August 2017 for SOS input support
+                var tmpStr="";
+                tmpStr+='<div class="dropdown">'+
+                        '   <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">'+
+                        '      '+ window.Android.translate("import_reading") +
+                        '     <span class="caret"></span>'+
+                        '   </button>'+
+                        '   <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">'+
+                        //'     <li><a href="#" onclick="var tmp=window.Android.getGPS();alert(tmp.lat+'+"' '"+'+tmp.lon);"><i class="glyphicon glyphicon-pencil"></i></a></li>'+
+                        //  The SOS input facility added in August 2017. User can either import SOS readings or enter text.
+                        '     <li><a href="#"  onclick="window.Android.getSosReadings('+obj["id"]+');"><i class="glyphicon glyphicon-import"></i> '+window.Android.translate("select_sos_readings")+'</a></li>'+
+                        '     <li role="separator" class="divider"></li>'+
+                        '     <textarea class="form-control" name="field_'+obj["id"]+'">'+obj["value"]+'</textarea>'+
+                        '    </ul>'+
+                        '</div> <div id="value_'+obj["id"]+'"></div>';
+                console.log(tmpStr);
+                return tmpStr;
+            }
             if(definedSqlTypes[i]["code"]=="boolean")
                 return '<input type="checkbox" name="field_'+obj["id"]+'" />';
             if(definedSqlTypes[i]["code"]=="date" || definedSqlTypes[i]["code"]=="datetime")
@@ -1273,12 +1305,4 @@ function addStatusControl(){
         '</ul>'+
         '</span>'+
         '</span>');
-}
-
-function startAudioRecord(start) {
-    window.Android.startAudioRecord(start);
-}
-
-function playAudioRecord(start) {
-    window.Android.playAudioRecord(start);
 }

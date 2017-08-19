@@ -8,19 +8,16 @@
     <string name="edit">Edit</string>
     <string name="home">Home</string>
     <string name="view">View</string>
-    <string name="take_video">Record a video</string>
     <string name="views_header">You can find below the list of elements you are able to view.</string>
     <string name="take_picture">Take a picture</string>
     <string name="use_gps">Use GPS position</string>
     <string name="cancel">Cancel</string>
     <string name="image">Image</string>
-    <string name="video">Video</string>
     <string name="import_success">Import success</string>
     <string name="import_download_start">Downloading file &#8320;</string>
     <string name="import_download_end">File downloaded</string>
     <string name="import_failure">Import failed</string>
     <string name="choose_picture">Select an existing photo</string>
-    <string name="choose_video">Select an existing Video</string>
     <string name="mm_import">Import</string>
     <string name="export">Export</string>
     <string name="import_never">Never imported</string>
@@ -40,7 +37,7 @@
     <string name="welcome">Welcome</string>
     <string name="export_success">Export has been successful</string>
     <string name="upload_start">Uploading your recorded data &#8320;</string>
-    <string name="file_create">Import a file</string>
+    <string name="file_create">Import Values</string>
     <string name="nolisting_intro_p">For being able to consult your data on the field, you need to first download the data and forms. To do so, please use the \"Import\" bouton presentend bellow and follow instructions then come back here.</string>
     <string name="import_intro_p">Before going on the field to record new data, make sure to download the latest version of the data and forms byt using the \"Import\" tool. Then, you can start recording new value within the MapMint4ME application.</string>
     <string name="export_intro_p">Once you have accomplished your mission, meaning that you return back with data acquired on the field.         Then you can use this tool to upload your data back to your MapMint server.</string>
@@ -49,4 +46,9 @@
     <string name="noserver_btn">Add a server</string>
     <string name="map">Map</string>
     <string name="no_gps">No GPS position</string>
+    <string name="import_reading">Import a reading</string>
+    <string name="take_video">Record a video</string>
+    <string name="video">Video</string>
+    <string name="select_sos_readings">Take readings from SOS</string>
+    <string name="choose_video">Select an existing Video</string>
 </resources>
