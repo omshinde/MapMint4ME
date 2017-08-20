@@ -64,7 +64,7 @@ public class GetSos extends Activity {
 
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBluetooth, 1);
+            mBluetoothAdapter.enable();
         }
 
         Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
@@ -152,6 +152,7 @@ public class GetSos extends Activity {
     }
 
     void closeBluetooth() throws IOException {
+        mBluetoothAdapter.disable();
         mBluetoothSocket.close();
         System.out.println("Socket Closed");
     }
