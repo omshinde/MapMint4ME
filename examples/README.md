@@ -98,6 +98,12 @@ On clicking **ADD** icon, you will see that the value gets incremented in the **
 <img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/video_in_table.png" width="280" height="400">
 </p>
 
+Also, by clicking on the **View** icon, and then on the **Test Video View**, you are able to see the captured video file in binary format with proper timestamp. The following image shows the output
+
+<p align="center">
+<img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/video_in_tables.png" width="280" height="400">
+</p>
+
 ### SOS data loading into the table
 #### NOTE: Before loading SOS data into the table, make sure that your SOS module is setup. Please refer [Setting up SOS module](https://github.com/omshinde/MapMint4ME/tree/gsoc-2017-camera/sos#setting-up-the-sensor-observation-service-sos) before moving forward.
 
