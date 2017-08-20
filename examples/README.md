@@ -44,7 +44,7 @@ For this also, please refer the following link explaining the process to import 
 
 In the above link, I was using the emulator of Android Studio. But, in this section, I will post images taken from testing with real device.
 
-After installing and runnig MapMint4ME, please click on *Import* icon. After clicking on the icon, you will see a screen like in the following image.
+After installing and running MapMint4ME, please click on **Import** icon. After clicking on the icon, you will see a screen like in the following image.
 
 <p align="center">
 <img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/add_server.png" width="280" height="400">
@@ -78,7 +78,7 @@ Now, from the **View** tab you will see the tables imported from the MapMint.
 Now, we can fianlly move towards seeing audio/video and SOS input data loaded into the tables.
 
 ### Audio/ Video recordings loading into the tables
-In the **Edit** tab, you will be getting folowing four options:
+In the **Edit** tab, you will be getting following four options:
 * Select an existing photo
 * Take a picture
 * Select an existing video
@@ -107,26 +107,49 @@ Also, by clicking on the **View** icon, and then on the **Test Video View**, you
 ### SOS data loading into the table
 #### NOTE: Before loading SOS data into the table, make sure that your SOS module is setup. Please refer [Setting up SOS module](https://github.com/omshinde/MapMint4ME/tree/gsoc-2017-camera/sos#setting-up-the-sensor-observation-service-sos) before moving forward.
 
-Similar to the video recording function, you will be seeing following options for importing SOS.
-* Import a reading: Take readings from SOS
-* Directly entering text into the Text field
+Since, the sensor readings will be obtained in string. It became important to have options to select among. NOw, if the user wants to import SOS reading directly, then he can select **Import readings form SOS**. But, if the user wants to enter text  data instead of SOS readings, then he can select **Enter text**.
+The following options are present for the user and he has to select one amongst them.
+
+* Import readings from SOS
+* Enter text
+
+#### First, we will see data imported from SOS
 
 <p align="center">
-<img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/options_sos.png" width="280" height="400">
+<img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/options_SOS_new.png" width="280" height="400">
 </p>
 
-On clicking the option for **Take readings from SOS**
-You will get to see the following output. The readings displayed are in the following format **Humidity(%):Temperature(Deg Celsius):Smoke content(ppm)**
+On clicking the option for **Import readings from SOS**
+You will get to see the sensor readings displayed on the same screen. The readings displayed are in the following format **Humidity(%):Temperature(Deg Celsius):Smoke content(ppm)**
+
+<p align="center">
+<img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/select_sos_import.png" width="280" height="400">
+</p>
+
 The results after adding the files will be like in following figure.
 
 <p align="center">
-<img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/readings_in_textbox.png" width="280" height="400">
-</p>
-
-<p align="center">
-<img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/readings_in_table.png" width="280" height="400">
+<img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/add_sos.png" width="280" height="400">
 </p>
 
 As we can see, the readings obtained from the SOS module is stored in the Tables.
+
+#### Now, we will see data entered as text
+
+<p align="center">
+<img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/options_text.png" width="280" height="400">
+</p>
+
+On selecting the **Enter text** option, you will see a textarea merging on the same screen. Now, you can enter desired text data to be stored in the table.
+
+<p align="center">
+<img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/select_text_import.png" width="280" height="400">
+</p>
+
+After clicking on **Add**, the entered text will be stored in the table. Please consider the below image for reference.
+
+<p align="center">
+<img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/add_text.png" width="280" height="400">
+</p>
 
 The code can be seen at the [link](https://github.com/omshinde/MapMint4ME/tree/gsoc-2017-camera).
