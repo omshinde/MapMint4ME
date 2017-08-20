@@ -56,7 +56,7 @@ It is mentioning that there is no MapMint server registered yet. So Let's regist
 <img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/server_details.png" width="280" height="400">
 </p>
 
-Click on the Add Server icon. Now, you will something like this screen.
+Click on the Add Server icon. Now, you will see a screen which is similar to the below image.
 
 <p align="center">
 <img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/server_added.png" width="280" height="400">
@@ -69,7 +69,6 @@ Now, click on the **import** icon at the side. the navigation bar will start mov
 </p>
 
 Now, from the **View** tab, you will see the tables imported from the MapMint.
-
 
 <p align="center">
 <img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/imported_tables.png" width="280" height="400">
@@ -90,7 +89,7 @@ It will be similar to the below image.
 <img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/options.png" width="280" height="400">
 </p>
 
-For video recording function, I can only choose **Test Video View** because only it contains a variable to store binary values.
+For video recording function, I can only choose **Test Video View** because as seen above in the table description, only this view contains a variable to store binary values.
 Out of these options, **Selecting an existing video** and **Record a video**, options are added in GSoC 2017. On clicking on any of these options, you will be able to perform that corresponding function.
 On clicking **ADD** icon, you will see that the value gets incremented in the **Test Video View**.
 
@@ -107,7 +106,7 @@ Also, by clicking on the **View** icon, and then on the **Test Video View**, you
 ### SOS data loading into the table
 #### NOTE: Before loading SOS data into the table, make sure that your SOS module is setup. Please refer [Setting up SOS module](https://github.com/omshinde/MapMint4ME/tree/gsoc-2017-camera/sos#setting-up-the-sensor-observation-service-sos) before moving forward.
 
-Since the sensor readings will be obtained in string. It became important to have options to select among. Now, if the user wants to import SOS reading directly, then he can select **Import readings from SOS**. But, if the user wants to enter text  data instead of SOS readings, then he can select **Enter text**.
+Since the sensor readings will be obtained in string. It became important to have options to select among the SOS data input and the text input. Now, if the user wants to **import SOS reading directly**, then he can select **Import readings from SOS**. But, if the user wants to **enter text data** instead of SOS readings, then he can select **Enter text**.
 The following options are present for the user and he has to select one amongst them.
 
 * Import readings from SOS
@@ -132,7 +131,7 @@ The results after adding the files will be like in the following figure.
 <img src="https://github.com/omshinde/MapMint4ME/blob/gsoc-2017-camera/examples/images/add_sos.png" width="280" height="400">
 </p>
 
-As we can see, the readings obtained from the SOS module is stored in the Tables.
+As we can see, the readings obtained from the SOS module are stored in the Table.
 
 #### Now, we will see data entered as text
 
