@@ -46,9 +46,10 @@
     <string name="noserver_btn">Add a server</string>
     <string name="map">Map</string>
     <string name="no_gps">No GPS position</string>
-    <string name="import_reading">Import a reading</string>
+    <string name="select_one_option">Select one option</string>
     <string name="take_video">Record a video</string>
     <string name="video">Video</string>
-    <string name="select_sos_readings">Take readings from SOS</string>
+    <string name="select_sos_readings">Import readings from SOS</string>
+    <string name="enter_text"> Enter text</string>
     <string name="choose_video">Select an existing Video</string>
 </resources>
