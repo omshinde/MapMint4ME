@@ -188,7 +188,7 @@ function loadNewVideo(cid,id,video){
         if($(this).is(":visible"))
           $(this).find("#value_"+id)
                 .html('<video height="auto" type="video/mp4" src="'+video+'" title="'+
-                         window.Android.translate('video')+'" width="100%" />');  
+                         window.Android.translate('video')+'" width="100%" />');
     });
  }
 
