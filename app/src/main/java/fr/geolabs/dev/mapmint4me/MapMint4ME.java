@@ -492,8 +492,9 @@ public class MapMint4ME extends Activity implements
         }
 
         if (requestCode == REQUEST_TAKE_VIDEO) {
-            if (resultCode == Activity.RESULT_OK)
+            if (resultCode == Activity.RESULT_OK) {
                 myWebView.loadUrl("javascript:loadNewVideo('" + cameraVideoCid + "','" + cameraVideoId + "','" + cameraVideoName + "');");
+            }
             else {
                 myWebView.loadUrl("javascript:console.log('error ! " + data.getData() + "');");
             }
