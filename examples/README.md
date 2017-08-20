@@ -7,11 +7,13 @@ This section comprises of following parts:
 
 ### Setup tables in MapMint local instance
 
-Please refer to the following link which explains about setting up **Tables** module in MapMint. 
+Before moving ahead, it would be neccesary that **MapMint is installed properly** and you are able to access **Dashboard** module of MapMint web interface. Please visit **[Quick Check on installation](https://github.com/omshinde/MapMint4ME/tree/gsoc-2017-camera#quick-check-on-installation)** to confirm that you are able to access MapMint Dashboard. Once it is confirmed, you can proceed further with below mentioned steps.
+
+The next step requires to setup the **Tables** module of the MapMint web interface. Please refer to the following link which explains about setting up **Tables** module in MapMint. 
 It explains in a step-by-step manner, the procedure to setup tables module.
 [Successful publication of tables using Tables module in MapMint](https://github.com/mapmint/mapmint/issues/9)
 
-For this example, I am creating following two tables:
+Following the procedure mentioned in the above link for publishing tables using Tables module, I am creating following two tables for this example:
 
 1. **test_table** by the title **Test_video**. The View name is Test Video View
 
@@ -120,3 +122,5 @@ The results after adding the files will be like in following figure.
 </p>
 
 As we can see, the readings obtained from the SOS module is stored in the Tables.
+
+The code can be seen at the [link](https://github.com/omshinde/MapMint4ME/tree/gsoc-2017-camera).
