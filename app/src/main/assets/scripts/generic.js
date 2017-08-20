@@ -397,15 +397,16 @@ function printCurrentType(obj,cid){
                 var tmpStr="";
                 tmpStr+='<div class="dropdown">'+
                         '   <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">'+
-                        '      '+ window.Android.translate("import_reading") +
+                        '      '+ window.Android.translate("select_one_option") +
                         '     <span class="caret"></span>'+
                         '   </button>'+
                         '   <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">'+
                         //'     <li><a href="#" onclick="var tmp=window.Android.getGPS();alert(tmp.lat+'+"' '"+'+tmp.lon);"><i class="glyphicon glyphicon-pencil"></i></a></li>'+
-                        //  The SOS input facility added in August 2017. User can either import SOS readings or enter text.
+                        //  The SOS input facility added in August 2017. User can import SOS readings by clicking on Import SOS readings.
                         '     <li><a href="#"  onclick="window.Android.getSosReadings('+obj["id"]+');"><i class="glyphicon glyphicon-import"></i> '+window.Android.translate("select_sos_readings")+'</a></li>'+
                         '     <li role="separator" class="divider"></li>'+
-                        '     <textarea class="form-control" name="field_'+obj["id"]+'">'+obj["value"]+'</textarea>'+
+                        //  The text input capability. User can enter text values by clicking on Save text values
+                        '     <li><a href="#"  onclick="loadTextReadings('+obj["id"]+');"><i class="glyphicon glyphicon-import"></i> '+window.Android.translate("enter_text")+'</a></li>'+
                         '    </ul>'+
                         '</div> <div id="value_'+obj["id"]+'"></div>';
                 console.log(tmpStr);
@@ -421,6 +422,16 @@ function printCurrentType(obj,cid){
         }
     }
     return null;
+}
+
+function loadTextReadings(id){
+    var tmpstr="";
+    $(".tab-pane").each(function(){
+        if($(this).is(":visible"))
+         $(this).find("#value_"+id)
+                .html('<textarea class="form-control" name="field_'+id+'">'+
+                        tmpstr+'</textarea>');
+    });            
 }
 
 /*****************************************************************************
