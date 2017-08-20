@@ -97,7 +97,7 @@ On clicking **ADD** icon, you will see that the value gets incremented in the **
 </p>
 
 ### SOS data loading into the table
-#### NOTE: Before loading SOS data into the table, make sure that your SOS module is setup. Please refer [Setting up SOS module](https://github.com/omshinde/MapMint4ME/tree/gsoc-2017-camera/sos) before moving forward.
+#### NOTE: Before loading SOS data into the table, make sure that your SOS module is setup. Please refer [Setting up SOS module](https://github.com/omshinde/MapMint4ME/tree/gsoc-2017-camera/sos#setting-up-the-sensor-observation-service-sos) before moving forward.
 
 Similar to the video recording function, you will be seeing following options for importing SOS.
 * Import a reading: Take readings from SOS
