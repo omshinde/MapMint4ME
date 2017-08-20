@@ -39,7 +39,7 @@ It contains the following columns:
 
 ### Importing data to the MapMint4ME from the local instance
 
-For this also, please refer the following link explaining the process to import data from the local instance to the MapMint4ME.
+For this, please refer the following link explaining the process to import data from the local instance to the MapMint4ME.
 [Using MapMint4ME for adding and editing tables](https://github.com/mapmint/mapmint/issues/10)
 
 In the above link, I was using the emulator of Android Studio. But, in this section, I will post images taken from testing with a real device.
