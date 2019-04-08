@@ -64,6 +64,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 
+
 public class WebAppInterface {
     private boolean mCenter = false;
     private Context mContext;
@@ -540,6 +541,26 @@ public class WebAppInterface {
     @JavascriptInterface
     public void pickupImage(String id, String cid) {
         ((MapMint4ME) mContext).invokePickupImage(id, cid);
+    }
+
+    @JavascriptInterface
+    public void pickupVideo() {
+        ((MapMint4ME) mContext).invokePickupVideo();
+    }
+
+    @JavascriptInterface
+    public void queryCameraForVideo() {
+        ((MapMint4ME) mContext).invokeCameraForVideo();
+    }
+
+    @JavascriptInterface
+    public void startAudioRecord(boolean start) {
+        ((MapMint4ME) mContext).onAudioRecord(start);
+    }
+
+    @JavascriptInterface
+    public void playAudioRecord(boolean start) {
+        ((MapMint4ME) mContext).onPlay(start);
     }
 
     @JavascriptInterface

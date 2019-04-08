@@ -244,6 +244,31 @@ function doModal(heading, formContent) {
                             setTimeout(function() { ping(myRoot, url,origin_url); }, 2000);
                     }else
                         setTimeout(function() { ping(myRoot, url,origin_url); }, 2000);
+
+                        if(MM4ME_DEBUG)
+                            console.log("timeout set");
+                    }catch(e){
+                        alert(e);
+                    }
+                },
+                error: function(){
+                    console.log(arguments);
+                    window.Android.showToast("PING FAILED !");
+                }
+            });
+        }
+
+        function createSqliteDB4ME(elem,url){
+            var curl=url+"?service=WPS&version=1.0.0&request=Execute&Identifier=mm4me.createSqliteDB4ME&DataInputs=&ResponseDocument=Result@asReference=true;Result1@asReference=true;Result2@asReference=true&storeExecuteResponse=true&status=true";
+            $.ajax({
+                method: "GET",
+                url: curl,
+                dataType: "xml",
+                success: function(data){
+                    if(MM4ME_DEBUG)
+                        console.log(data);
+                    var statusLocation=$(data).find("ExecuteResponse").attr("statusLocation");
+
                     if(MM4ME_DEBUG)
                         console.log("timeout set");
                 }catch(e){

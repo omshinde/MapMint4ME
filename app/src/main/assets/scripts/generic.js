@@ -1645,6 +1645,7 @@ function displayNoListing(){
  *****************************************************************************/
 function authenticate(url,login,passwd,func,func1){
     var curl=url+"?service=WPS&request=Execute&version=1.0.0&Identifier=authenticate.clogIn&DataInputs=login="+login+";password="+passwd+"&RawDataOutput=Result";
+    console.log(curl);
     if(MM4ME_DEBUG)
         console.log(curl);
     $.ajax({
@@ -2121,6 +2122,21 @@ function addStatusControl(){
         '</span>'+
         '</span>');
 }
+
+function queryCameraForVideo() {
+    window.Android.queryCameraForVideo();
+}
+
+function pickupVideo() {
+    window.Android.pickupVideo();
+}
+
+function startAudioRecord(start) {
+    window.Android.startAudioRecord(start);
+}
+
+function playAudioRecord(start) {
+    window.Android.playAudioRecord(start);
 
 /*****************************************************************************
  * Initialize the map and show the current GPS location

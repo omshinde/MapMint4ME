@@ -61,6 +61,8 @@ import android.webkit.WebViewClient;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+import android.media.MediaPlayer;
+import android.media.MediaRecorder;
 
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -238,6 +240,7 @@ public class MapMint4ME extends Activity implements
             webSettings.setJavaScriptEnabled(true);
             webSettings.setPluginState(WebSettings.PluginState.ON);
             webSettings.setDomStorageEnabled(true);
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mCookieManager.setAcceptThirdPartyCookies(myWebView, true);
             }
@@ -653,6 +656,46 @@ public class MapMint4ME extends Activity implements
                 myWebView.loadUrl("javascript:console.log('error ! " + resultCode + "');");
             }
         }
+
+        if (requestCode == REQUEST_TAKE_VIDEO) {
+            if (resultCode == Activity.RESULT_OK)
+                myWebView.loadUrl("javascript:loadNewPicture('" + cameraVideoCid + "','" + cameraVideoId + "','" + cameraVideoName + "');");
+            else {
+                myWebView.loadUrl("javascript:console.log('error ! " + data.getData() + "');");
+            }
+        }
+        if (requestCode == PICK_VIDEO) {
+            if (resultCode == Activity.RESULT_OK) {
+                try {
+                    InputStream in = getContentResolver().openInputStream(data.getData());
+                    File asset_dir = new File(getFilesDir() + File.separator + "data");
+                    File myOutputFile=createVideoFile();
+                    Uri outputURI = FileProvider.getUriForFile(getApplicationContext(),
+                            "fr.geolabs.dev.fileprovider",
+                            myOutputFile);
+                    cameraVideoName = outputURI.toString();
+                    FileOutputStream fos = new FileOutputStream(myOutputFile);
+                    BufferedOutputStream bout = new BufferedOutputStream(fos, 1024);
+                    byte[] data1 = new byte[1024];
+                    int x = 0;
+                    while ((x = in.read(data1, 0, 1024)) >= 0) {
+                        bout.write(data1, 0, x);
+                    }
+                    fos.flush();
+                    bout.flush();
+                    fos.close();
+                    bout.close();
+                    in.close();
+                    myWebView.loadUrl("javascript:loadNewPicture('" + cameraVideoCid + "','" + cameraVideoId + "','" + cameraVideoName + "');");
+                } catch (Exception e) {
+                    Toast.makeText(getApplicationContext(), "Error : " + e, Toast.LENGTH_LONG).show();
+                    myWebView.loadUrl("javascript:console.log('" + e + "');");
+                }
+
+            } else {
+                myWebView.loadUrl("javascript:console.log('error ! " + data.getData() + "');");
+            }
+        }
         super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -758,8 +801,159 @@ public class MapMint4ME extends Activity implements
         startActivityForResult(chooserIntent, PICK_IMAGE);
     }
 
+    String cameraVideoId = null;
+    String cameraVideoCid = null;
+    String cameraVideoName = null;
+    String mCurrentVideoPath;
+
+    private File createVideoFile() throws IOException {
+        // Create a video file
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String videoFileName = "VID_" + timeStamp + ".mp4";
+        File storageDir = new File(getFilesDir(), "Android/data/fr.geolabs.dev.mapmint4me/files/Video");
+
+        //Create directories in case they do not exist
+        if(!storageDir.exists()) storageDir.mkdirs();
+        File video = new File(storageDir, videoFileName);
+
+        //Save the file: path required for use with ACTION_VIEW intents
+        mCurrentVideoPath = "file:" + video.getAbsolutePath();
+        return video;
+    }
+
+    static final int REQUEST_TAKE_VIDEO = 1223;
+    static final int PICK_VIDEO = 1224;
+
+    public void invokeCameraForVideo() {
+        Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+
+        //Ensure that there's a camera activity to handle the intent
+        if (takeVideoIntent.resolveActivity(getPackageManager()) != null){
+
+            /*// Create the file where video should be stored
+            File videoFile = null;
+            try {
+                videoFile = createVideoFile();
+            } catch (IOException ex) {
+                // Error occured while creating the file
+                //
+                Toast.makeText(getApplicationContext(), "Error : " + ex, Toast.LENGTH_LONG).show();
+            }
+            // Continue only if the File was successfully created
+            if (videoFile != null) {
+                Uri videoURI = FileProvider.getUriForFile(getApplicationContext(), "fr.geolabs.dev.fileProvider", videoFile);
+                takeVideoIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                String packageName0 = takeVideoIntent.getPackage();
+                Toast.makeText(getBaseContext(), "Authorize Package 0 : " + packageName0, Toast.LENGTH_SHORT).show();
+                List<ResolveInfo> resInfoList = getPackageManager().queryIntentActivities(takeVideoIntent, PackageManager.MATCH_DEFAULT_ONLY);
+                for (ResolveInfo resolveInfo : resInfoList) {
+                    String packageName = resolveInfo.activityInfo.packageName;
+                    Toast.makeText(getApplicationContext(), "Authorize Package 1 : " + packageName, Toast.LENGTH_LONG).show();
+                    getApplicationContext().grantUriPermission(packageName, videoURI, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                }
+                takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT, videoURI);
+                //cameraVideoId = id;
+                //cameraVideoCid = cid;
+                cameraVideoName = videoURI.toString();*/
+                startActivityForResult(takeVideoIntent, REQUEST_TAKE_VIDEO);
+            //}
+        }
+    }
+
+    public void invokePickupVideo() {
+        Intent getVideoIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        getVideoIntent.setType("video/*");
+
+        Intent pickVideoIntent = new Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
+        pickVideoIntent.setType("video/*");
+
+        Intent chooserVideoIntent = Intent.createChooser(getVideoIntent, "Select Video");
+        chooserVideoIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{pickVideoIntent});
+
+        //cameraVideoId = id;
+        //cameraVideoCid = cid;
+
+        /*List<ResolveInfo> resInfoList = getPackageManager().queryIntentActivities(pickVideoIntent, PackageManager.MATCH_DEFAULT_ONLY);
+        for (ResolveInfo resolveInfo : resInfoList) {
+            String packageName = resolveInfo.activityInfo.packageName;
+            //Toast.makeText(getApplicationContext(), "Authorize Package 1 : " + packageName, Toast.LENGTH_LONG).show();
+            try {
+                getApplicationContext().grantUriPermission(packageName, MediaStore.Video.Media.EXTERNAL_CONTENT_URI, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } catch (Exception e) {
+                int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+                if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_READ_VIDEO);
+                }
+            }
+        }*/
+        startActivityForResult(chooserVideoIntent, PICK_VIDEO);
+    }
+
+    private static String mFileName = null;
+    private MediaRecorder mAudioRecorder = null;
+    private MediaPlayer mPlayer = null;
+
+    public void onAudioRecord(boolean start) {
+        if (start) {
+            startRecording();
+        } else {
+            stopRecording();
+        }
+    }
+
+    public void onPlay(boolean start) {
+        if (start) {
+            startPlaying();
+        } else {
+            stopPlaying();
+        }
+    }
+
+    public void startRecording() {
+        mAudioRecorder = new MediaRecorder();
+        mAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+        mAudioRecorder.setOutputFile(mFileName);
+        mAudioRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+
+        try {
+            mAudioRecorder.prepare();
+        } catch (IOException e) {
+            Log.e(TAG, "Couldn't Prepare Record, prepare() failed");
+        }
+
+        mAudioRecorder.start();
+    }
+
+    public void stopRecording() {
+        mAudioRecorder.stop();
+        mAudioRecorder.release();
+        mAudioRecorder = null;
+
+    }
+
+    public void startPlaying() {
+        mPlayer = new MediaPlayer();
+        try {
+            mPlayer.setDataSource(mFileName);
+            mPlayer.prepare();
+            mPlayer.start();
+        } catch (IOException e) {
+            Log.e(TAG, "Couldn't Prepare Record, prepare() failed");
+        }
+
+    }
+
+    public void stopPlaying() {
+        mPlayer.release();
+        mPlayer = null;
+    }
+
     public static final int MY_PERMISSIONS_REQUEST_READ_MEDIA = 1233456666;
     public static final int MY_PERMISSIONS_REQUEST_GPS = 1233456667;
+    public static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 1233456668;
+    //public static final int MY_PERMISSIONS_REQUEST_READ_VIDEO = 1233456669;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
@@ -774,6 +968,16 @@ public class MapMint4ME extends Activity implements
                     Log.d(TAG, "Allowed to access the gps!!");
                 }
                 break;
+            case MY_PERMISSIONS_REQUEST_RECORD_AUDIO:
+                if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    Log.d(TAG, "Allowed to access the Audio recorder!!");
+                }
+                break;
+            // case MY_PERMISSIONS_REQUEST_RECORD_VIDEO:
+            //     if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+            //         Log.d(TAG, "Allowed to access the Video recorder!!");
+            //     }
+            //     break;
             default:
                 if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     Log.d(TAG, "Allowed to access "+permissions[0]+"!!");
