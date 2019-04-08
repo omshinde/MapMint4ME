@@ -22,11 +22,14 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="com.android.vending.CHECK_LICENSE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
     <uses-permission android:name="android.permission.CAMCORDER" />
 
 
     <uses-feature android:name="android.hardware.camera2" android:required="false" />
+    
     <uses-feature android:name="android.hardware.bluetooth" android:required="false"/>
     <uses-feature
         android:name="android.hardware.camera"
@@ -76,7 +79,7 @@
         </activity>
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="fr.geolabs.dev.fileprovider"
+            android:authorities="fr.geolabs.dev.mapmint4me.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

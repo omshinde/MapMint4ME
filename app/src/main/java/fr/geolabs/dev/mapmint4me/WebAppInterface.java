@@ -37,6 +37,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -530,6 +531,14 @@ public class WebAppInterface {
         return dbs.execute(query, values, types);
     }
 
+    /** 
+     * Added in August 2017 for SOS input support
+     */
+    @JavascriptInterface
+    public void getSosReadings(String id) throws IOException {
+        ((MapMint4ME) mContext).callGetSos(id);
+    }
+
     /**
      * Set mTop to true/false from the web page
      */
@@ -543,24 +552,20 @@ public class WebAppInterface {
         ((MapMint4ME) mContext).invokePickupImage(id, cid);
     }
 
+    /**
+     * Added in August 2017 for Video input support
+     */
     @JavascriptInterface
-    public void pickupVideo() {
-        ((MapMint4ME) mContext).invokePickupVideo();
+    public void pickupVideo(String id, String cid) {
+        ((MapMint4ME) mContext).invokePickupVideo(id, cid);
     }
 
+    /**
+     * Added in August 2017 for Video input support
+     */
     @JavascriptInterface
-    public void queryCameraForVideo() {
-        ((MapMint4ME) mContext).invokeCameraForVideo();
-    }
-
-    @JavascriptInterface
-    public void startAudioRecord(boolean start) {
-        ((MapMint4ME) mContext).onAudioRecord(start);
-    }
-
-    @JavascriptInterface
-    public void playAudioRecord(boolean start) {
-        ((MapMint4ME) mContext).onPlay(start);
+    public void queryCameraForVideo(String id, String cid) {
+        ((MapMint4ME) mContext).invokeCameraForVideo(id, cid);
     }
 
     @JavascriptInterface

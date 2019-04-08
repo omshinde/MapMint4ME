@@ -2,5 +2,6 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android"
     android:installLocation="auto">
     <files-path name="my_images" path="Android/data/fr.geolabs.dev.mapmint4me/files/Pictures" />
+    <files-path name="my_videos" path="Android/data/fr.geolabs.dev.mapmint4me/files/Videos" />
     <files-path name="android_assets" path="Android/data/fr.geolabs.dev.mapmint4me/assets" />
 </paths>

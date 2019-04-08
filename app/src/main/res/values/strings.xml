@@ -8,8 +8,10 @@
     <string name="edit">Edit</string>
     <string name="home">Home</string>
     <string name="view">View</string>
+
     <string name="take_video">Video Recording</string>
     <string name="views_header">You can find below the list of elements you are able to view.</string>
+
     <string name="views_header"> Below you will find a list of features you are able to view.</string>
     <string name="take_picture">Take a picture</string>
     <string name="use_gps">Use GPS position</string>
@@ -51,11 +53,19 @@
     <string name="nolisting_intro_p">In order to view your data in the field, you must first ensure that you have downloaded your data and forms using the \"Import\" module (see below and follow associated instructions before returning here).</string>
     <string name="import_intro_p">Before going to the field to collect data, please ensure that you have downloaded the latest version of the Data and related Templates. Once complete, you will be able to start recording your data.</string>
     <string name="export_intro_p">Once you have completed your field data collection, you can use the Export button below to post your data back to the MapMint server.</string>
+
     <string name="gps_unknown">Unknown</string>
     <string name="noserver_intro_p">You have not configured any MapMint Server, please configure one.</string>
     <string name="noserver_btn">Add a server</string>
     <string name="map">Map</string>
     <string name="no_gps">No GPS position</string>
+
+    <string name="select_one_option">Select one option</string>
+    <string name="take_video">Record a video</string>
+    <string name="video">Video</string>
+    <string name="select_sos_readings">Import readings from SOS</string>
+    <string name="enter_text"> Enter text</string>
+    <string name="choose_video">Select an existing Video</string>
     <string name="gps_track">GPS Track</string>
     <string name="view_feature">View feature</string>
     <string name="about_intro">Your are using the MapMint4ME application. It is provided free of charge under the term of the MIT/X11 License and aims to provide an easy to use editing tool for your own data on the field.</string>

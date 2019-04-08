@@ -244,7 +244,6 @@ function doModal(heading, formContent) {
                             setTimeout(function() { ping(myRoot, url,origin_url); }, 2000);
                     }else
                         setTimeout(function() { ping(myRoot, url,origin_url); }, 2000);
-
                         if(MM4ME_DEBUG)
                             console.log("timeout set");
                     }catch(e){
@@ -268,7 +267,6 @@ function doModal(heading, formContent) {
                     if(MM4ME_DEBUG)
                         console.log(data);
                     var statusLocation=$(data).find("ExecuteResponse").attr("statusLocation");
-
                     if(MM4ME_DEBUG)
                         console.log("timeout set");
                 }catch(e){

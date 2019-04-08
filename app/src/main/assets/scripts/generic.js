@@ -178,6 +178,34 @@ function loadNewPicture(cid,id,picture){
                         window.Android.translate('image')+'" width="100%" />');
     });
 }
+/*****************************************************************************
+ *Display an HTML part containing the data obtained by SOS.
+ * Added in August 2017 for Audio/ Video support
+ ****************************************************************************/
+ function loadSosData(id, data){
+    $(".tab-pane").each(function(){
+        if($(this).is(":visible"))
+         $(this).find("#value_"+id)
+                //.html('<img class="img-responsive" src="'+picture+'" title="'+
+                //        window.Android.translate('image')+'" width="100%" />')
+                .html('<textarea id="sos_data_view" class="form-control" name="field_'+id+'">'+
+                        data+'</textarea>');
+    });
+ }
+
+/*****************************************************************************
+ * Display an HTML part containing the video recorded by Camera or picked from
+ *the photo library.
+ * Added in August 2017 for Audio/ Video support
+ *****************************************************************************/
+function loadNewVideo(cid,id,video){
+    $(".tab-pane").each(function(){
+        if($(this).is(":visible"))
+          $(this).find("#value_"+id)
+                .html('<video height="auto" type="video/mp4" src="'+video+'" title="'+
+                         window.Android.translate('video')+'" width="100%" />');
+    });
+ }
 
 
 /*****************************************************************************
@@ -245,6 +273,13 @@ function printCurrentType(obj,cid){
                         '     <li><a href="#"  onclick="window.Android.pickupImage('+obj["id"]+','+cid+');"><i class="glyphicon glyphicon-picture"></i> '+window.Android.translate("choose_picture")+'</a></li>'+
                         '     <li role="separator" class="divider"></li>'+
                         '     <li><a href="#" onclick="window.Android.queryCamera('+obj["id"]+','+cid+');"><i class="glyphicon glyphicon-camera"></i> '+window.Android.translate("take_picture")+'</a></li>'+
+                        '     <li role="separator" class="divider"></li>'+
+                        //  The Video recording and Video Picker facility is added in August 2017
+                        '      <li><a href="#" onclick="window.Android.pickupVideo('+obj["id"]+','+cid+');"><i class="glyphicon glyphicon-film"></i> '+window.Android.translate("choose_video")+'</a></li>'+
+                        '      <li role="separator" class="divider"></li>'+
+                        '      <li><a href="#" onclick="window.Android.queryCameraForVideo('+obj["id"]+','+cid+');"><i class="glyphicon glyphicon-camera"></i> '+window.Android.translate("take_video")+'</a></li>'+
+                        '    </ul>'+
+                        '</div> <div id="value_'+obj["id"]+'"></div>';
                         '   </ul>'+
                         '</div> <div id="value_'+obj["id"]+'"></div><script>currentTypes.push(\''+obj["id"]+'_display\');</script>';
                 console.log(tmpStr);
@@ -416,8 +451,26 @@ function printCurrentType(obj,cid){
             }
             if(definedSqlTypes[i]["code"]=="html")
                 return '<textarea class="swagEditor" name="field_'+obj["id"]+'">'+obj["value"]+'</textarea>';
-            if(definedSqlTypes[i]["code"]=="text")
-                return '<textarea class="form-control" name="field_'+obj["id"]+'">'+obj["value"]+'</textarea>';
+            if(definedSqlTypes[i]["code"]=="text"){
+                //Added to generic.js in August 2017 for SOS input support
+                var tmpStr="";
+                tmpStr+='<div class="dropdown">'+
+                        '   <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">'+
+                        '      '+ window.Android.translate("select_one_option") +
+                        '     <span class="caret"></span>'+
+                        '   </button>'+
+                        '   <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">'+
+                        //'     <li><a href="#" onclick="var tmp=window.Android.getGPS();alert(tmp.lat+'+"' '"+'+tmp.lon);"><i class="glyphicon glyphicon-pencil"></i></a></li>'+
+                        //  The SOS input facility added in August 2017. User can import SOS readings by clicking on Import SOS readings.
+                        '     <li><a href="#"  onclick="window.Android.getSosReadings('+obj["id"]+');"><i class="glyphicon glyphicon-import"></i> '+window.Android.translate("select_sos_readings")+'</a></li>'+
+                        '     <li role="separator" class="divider"></li>'+
+                        //  The text input capability. User can enter text values by clicking on Save text values
+                        '     <li><a href="#"  onclick="loadTextReadings('+obj["id"]+');"><i class="glyphicon glyphicon-import"></i> '+window.Android.translate("enter_text")+'</a></li>'+
+                        '    </ul>'+
+                        '</div> <div id="value_'+obj["id"]+'"></div>';
+                console.log(tmpStr);
+                return tmpStr;
+            }
             if(definedSqlTypes[i]["code"]=="boolean")
                 return '<input type="checkbox" name="field_'+obj["id"]+'" />';
             if(definedSqlTypes[i]["code"]=="date" || definedSqlTypes[i]["code"]=="datetime")
@@ -428,6 +481,16 @@ function printCurrentType(obj,cid){
         }
     }
     return null;
+}
+
+function loadTextReadings(id){
+    var tmpstr="";
+    $(".tab-pane").each(function(){
+        if($(this).is(":visible"))
+         $(this).find("#value_"+id)
+                .html('<textarea class="form-control" name="field_'+id+'">'+
+                        tmpstr+'</textarea>');
+    });            
 }
 
 function printOptionalCheckbox(obj,cid){
@@ -452,6 +515,7 @@ function printOptionalCheckbox(obj,cid){
 
 var refTypeId=null;
 var editPrintedOnce=[];
+
 /*****************************************************************************
  * Create HTML part to display the line containing both the title and the
  * corresponding input for a given table's field.
@@ -708,7 +772,13 @@ function runInsertQuery(obj,mid,func){
                 queryAttr.push(editSchema[mid][i][j]["name"]);
                 queryValues0.push("?");
                 queryTypes.push(parseInt(editSchema[mid][i][j]["ftype"]));
-                queryValues.push($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src"));
+                //To differentiate amongst Image and Video
+                if($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("video").attr("src")==undefined){
+                    queryValues.push($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src"));
+                }
+                else if($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src")==undefined){
+                    queryValues.push($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("video").attr("src"));
+                }
                 //subquery+=",readfile('"+$(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src")+"')";
             }
         }
@@ -794,8 +864,13 @@ function runUpdateQuery(obj,mid,func){
                 //queryAttr.push(editSchema[mid][i][j]["name"]);
                 query+=(lcnt>0?", ":"")+editSchema[mid][i][j]["name"]+"=?";
                 queryTypes.push(parseInt(editSchema[mid][i][j]["ftype"]));
-                queryValues.push($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src"));
-                //subquery+=",readfile('"+$(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src")+"')";
+                //To differentiate amongst Image and Video
+                if($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("video").attr("src")==undefined){
+                    queryValues.push($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src"));
+                }
+                else if($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").attr("src")==undefined){
+                    queryValues.push($(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("video").attr("src"));
+                }
                 lcnt+=1;
             }
         }
