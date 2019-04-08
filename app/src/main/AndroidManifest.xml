@@ -31,11 +31,9 @@
     <uses-feature android:name="android.hardware.camera2" android:required="false" />
     
     <uses-feature android:name="android.hardware.bluetooth" android:required="false"/>
-
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
-
 
     <supports-screens android:anyDensity="true" />
     <permission

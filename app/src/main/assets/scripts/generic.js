@@ -2198,6 +2198,21 @@ function addStatusControl(){
         '</span>');
 }
 
+function queryCameraForVideo() {
+    window.Android.queryCameraForVideo();
+}
+
+function pickupVideo() {
+    window.Android.pickupVideo();
+}
+
+function startAudioRecord(start) {
+    window.Android.startAudioRecord(start);
+}
+
+function playAudioRecord(start) {
+    window.Android.playAudioRecord(start);
+
 /*****************************************************************************
  * Initialize the map and show the current GPS location
  *****************************************************************************/
