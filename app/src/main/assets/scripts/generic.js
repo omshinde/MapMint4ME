@@ -1,4 +1,4 @@
-var MM4ME_DEBUG=false;
+var MM4ME_DEBUG=true;
 var EDITION_TYPE_FILE=5;
 var mainTable={};
 var mtable=null;
@@ -20,7 +20,13 @@ if(lang=="fr"){
 }
 
 
+function loadWelcome(){
+    window.Android.startWelcomeScreen();
+}
 
+/*****************************************************************************
+ * Update status icon color depending on network and GPS availability
+ *****************************************************************************/
 function updateStatus(gps,internet){
     if(internet){
         $('.glyphicon-signal').css('color','#00EE00');
@@ -36,10 +42,12 @@ function updateStatus(gps,internet){
             $('#gpsMenu1').next().append('<li> <i class="glyphicon glyphicon-ok" style="color: #'+(gps[i].source=="GPS"?"298836":gps[i].source=="Network"?"5bb04b":"81d071")+'"></i> '+gps[i].source+'</li>');
     }
 }
+
 /*****************************************************************************
  * List all available table for a given theme
  *****************************************************************************/
 function fetchTableForTheme(obj,id){
+    var hasTable=false;
     var tables=JSON.parse(window.Android.displayTable(
         "SELECT mm4me_tables.id as tid,mm4me_views.id as id,"+
             "mm4me_tables.name as name, "+
@@ -62,7 +70,9 @@ function fetchTableForTheme(obj,id){
             "selectable": true,
             "tags": [ ""+list1[0]["nb"] ]
         });
+        hasTable=true;
     }
+    return tables.length>0;
 }
 
 /*****************************************************************************
@@ -89,7 +99,11 @@ function displayTablesTree(func){
         for(var i=0;i<themes_0.length;i++){
             allThemes.push({text: themes_0[i]["name"]});
             fetchThemes(allThemes[allThemes.length-1],themes_0[i]["id"]);
-            fetchTableForTheme(allThemes[allThemes.length-1],themes_0[i]["id"]);
+            var hasTable=fetchTableForTheme(allThemes[allThemes.length-1],themes_0[i]["id"]);
+            if(!hasTable){
+                console.log("should remove!");
+                allThemes.pop(allThemes[allThemes.length-1]);
+            }
         }
         $(".mm4me_content").append('<div id="tree"></div>');
         $('#tree').treeview({
@@ -123,6 +137,7 @@ function displayTablesTree(func){
         }
     }
     catch(e){
+        console.log(e);
         displayNoListing();
     }
 }
@@ -159,7 +174,7 @@ function loadNewPicture(cid,id,picture){
     $(".tab-pane").each(function(){
         if($(this).is(":visible"))
          $(this).find("#value_"+id)
-                .html('<img class="img-responsive" src="'+picture+'" title="'+
+                .html('<pre>'+picture+'</pre><img class="img-responsive" src="'+picture+'" title="'+
                         window.Android.translate('image')+'" width="100%" />');
     });
 }
@@ -183,15 +198,17 @@ function fetchDependencies(obj,cid,changingField){
                 changingField[key]["dep"][i][ckey]["id"]=list1[0]["id"];
                 for(var j=0;j<changingField[key]["dep"][i][ckey]["options"].length;j++){
                     var creq=list1[0]["value"];
-                    if(creq.toLowerCase().indexOf("WHERE ")<0){
-                        creq=creq.replace(/order by/,"WHERE "+
-                               changingField[key]["dep"][i][ckey]["tfield"]+
-                               changingField[key]["dep"][i][ckey]["operator"]+
-                               changingField[key]["dep"][i][ckey]["options"][j]+
-                               " order by ");
+                    if(changingField[key]["dep"][i][ckey]["tfield"]!="none"){
+                        if(creq.toLowerCase().indexOf("WHERE ")<0){
+                            creq=creq.replace(/order by/,"WHERE "+
+                                   changingField[key]["dep"][i][ckey]["tfield"]+
+                                   changingField[key]["dep"][i][ckey]["operator"]+
+                                   changingField[key]["dep"][i][ckey]["options"][j]+
+                                   " order by ");
+                        }
+                        list0=JSON.parse(window.Android.displayTable(cleanupTableName(creq),[]));
+                        changingField[key]["dep"][i][ckey]["values"].push(list0);
                     }
-                    list0=JSON.parse(window.Android.displayTable(cleanupTableName(creq),[]));
-                    changingField[key]["dep"][i][ckey]["values"].push(list0);
                 }
             }
 
@@ -201,6 +218,7 @@ function fetchDependencies(obj,cid,changingField){
 }
 
 var View_template=null;
+var currentTypes=[];
 
 /*****************************************************************************
  * Display an HTML part containing the input corresponding to a given type.
@@ -215,7 +233,9 @@ function printCurrentType(obj,cid){
             //console.log(JSON.stringify(definedSqlTypes[i]));
             if(definedSqlTypes[i]["code"]=="bytea"){
                 var tmpStr="";
-                tmpStr+='<div class="dropdown">'+
+                var res='<input type="checkbox" id="'+obj["id"]+'_display" onchange="if($(this).is(\':checked\')) {$(this).prev().css(\'color\',\'#83C849\');$(this).next().show();$(this).next().next().show();}else {$(this).prev().css(\'color\',\'#ff0000\');$(this).next().hide();$(this).next().next().hide();}"/>';
+                tmpStr+=res+
+                        '<div class="dropdown">'+
                         '   <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">'+
                         '      '+ window.Android.translate("file_create") +
                         '     <span class="caret"></span>'+
@@ -226,13 +246,27 @@ function printCurrentType(obj,cid){
                         '     <li role="separator" class="divider"></li>'+
                         '     <li><a href="#" onclick="window.Android.queryCamera('+obj["id"]+','+cid+');"><i class="glyphicon glyphicon-camera"></i> '+window.Android.translate("take_picture")+'</a></li>'+
                         '   </ul>'+
-                        '</div> <div id="value_'+obj["id"]+'"></div>';
+                        '</div> <div id="value_'+obj["id"]+'"></div><script>currentTypes.push(\''+obj["id"]+'_display\');</script>';
                 console.log(tmpStr);
                 return tmpStr;
             }
             if(definedSqlTypes[i]["code"]=="geometry"){
-                return '<button class="btn btn-default" href="#" onclick="requireGPSPosition(\'field_'+obj["id"]+'\');" id="btn_field_'+obj["id"]+'"><i class="glyphicon glyphicon-map-marker"></i> '+window.Android.translate("use_gps")+'</button>'+
-                    '<div><input type="hidden" name="field_'+obj["id"]+'" value="" /><h4>GPS Informations</h4><h5>Type <span class="btn_field_'+obj["id"]+'_source"></span></h5><h5>Coords</h5><h5 class="btn_field_'+obj["id"]+'_long"></h5><h5 class="btn_field_'+obj["id"]+'_lat"></h5></div>';
+                console.log("CID: "+cid+" select type from mm4me_gc where f_table_schema||'_'||f_table_name = (select name from mm4me_tables where id="+cid+") ")
+                var geoType=getGeometryType("(select replace(name,'.','_') from mm4me_tables where id="+cid+")");
+                var viewb='<button id="field_'+obj["id"]+'_map" style="display:none" class="btn btn-default" href="#" onclick=""><i class="glyphicon glyphicon-globe"></i> '+window.Android.translate("view_on_map")+'</button>';
+                var res='<script>currentTypes.push(\''+obj["id"]+'_display\');</script> <input type="checkbox" id="'+obj["id"]+'_display" onchange="if($(this).is(\':checked\')) {$(this).next().show();$(this).next().next().show();}else {$(this).next().hide();$(this).next().next().hide();}"/>';
+                if(geoType=='POINT' || geoType=='MULTIPOINT' )
+                return res+'<button class="btn btn-default" href="#" onclick="requireGPSPosition(\'field_'+obj["id"]+'\');" id="btn_field_'+obj["id"]+'"><i class="glyphicon glyphicon-map-marker"></i> '+window.Android.translate("use_gps")+'</button>'+
+                    '<div><input type="hidden" name="field_'+obj["id"]+'" value="" data-optional="true" /><h4>GPS Informations</h4><h5>Type <span class="btn_field_'+obj["id"]+'_source"></span></h5><h5>Coords</h5><h5 class="btn_field_'+obj["id"]+'_long"></h5><h5 class="btn_field_'+obj["id"]+'_lat"></h5></div>';
+                else if(geoType=='LINESTRING' || geoType=='MULTILINESTRING' )
+                return res+'<button class="btn btn-default" href="#" onclick="trackGPSPosition(\'field_'+obj["id"]+'\',\'line\');" id="btn_field_'+obj["id"]+'"><i class="glyphicon glyphicon-map-marker"></i> '+window.Android.translate("drawl_gps")+'</button>'+
+                    '<button class="btn btn-default" href="#" onclick="trackStepByStepPosition(\'field_'+obj["id"]+'\',\'line\');" id="btn_field_'+obj["id"]+'"><i class="glyphicon glyphicon-map-marker"></i> '+window.Android.translate("drawlm_gps")+'</button>'+
+                    '<div><input type="hidden" name="field_'+obj["id"]+'" value="" data-optional="true" />'+viewb+'</div>';
+                else if(geoType=='POLYGON' || geoType=='MULTIPOLYGON' )
+                return res+'<button class="btn btn-default" href="#" onclick="trackGPSPosition(\'field_'+obj["id"]+'\',\'polygon\');" id="btn_field_'+obj["id"]+'"><i class="glyphicon glyphicon-map-marker"></i> '+window.Android.translate("drawp_gps")+'</button>'+
+                    '<button class="btn btn-default" href="#" onclick="trackStepByStepPosition(\'field_'+obj["id"]+'\',\'polygon\');" id="btn_field_'+obj["id"]+'"><i class="glyphicon glyphicon-map-marker"></i> '+window.Android.translate("drawpm_gps")+'</button>'+
+                    '<div><input type="hidden" name="field_'+obj["id"]+'" value="" data-optional="true" />'+viewb+'</div>';
+
             }
             if(definedSqlTypes[i]["code"]=="tbl_linked"){
                 var tmp=obj["value"].split(';');
@@ -319,21 +353,33 @@ function printCurrentType(obj,cid){
                 var refs=JSON.parse(window.Android.displayTable(cleanupTableName(req),[]));
                 var tmpStr='<select name="field_'+obj["id"]+'" class="form-control">';
                 var cvalues=[];
+                //console.log(JSON.stringify(refs));
                 for(var j=0;j<refs.length;j++){
                     var tmpStr2='';
                     var cnt=0;
-                    tmpStr+="<option "
+                    var cStr="<option ";
+                    //tmpStr+="<option ";
+                    //console.log(JSON.stringify(refs[j]));
                     for(var k in refs[j]){
                         if(cnt==0){
-                            tmpStr+='value="'+refs[j][k]+'">';
+                            //tmpStr+='value="'+refs[j][k]+'">';
+                            cStr+='value="'+refs[j][k]+'">';
                             cvalues.push(refs[j][k]);
                         }
                         else
                         if(cnt==1)
-                            tmpStr+=refs[j][k];
+                            //tmpStr+=refs[j][k];
+                            cStr+=refs[j][k];
                         cnt+=1;
                     }
-                    tmpStr+="</option>"
+                    //tmpStr+="</option>"
+                    cStr+="</option>";
+                    if(cnt==1){
+                        for(var k in refs[j]){
+                            cStr='<option value="null">'+refs[j][k]+'</option>';
+                        }
+                    }
+                    tmpStr+=cStr;
                 }
                 tmpStr+="</select>";
 
@@ -342,13 +388,24 @@ function printCurrentType(obj,cid){
                     var lobj={};
                     lobj[obj["id"]]={"dep":JSON.parse(obj["dependencies"])};
                     for(var jj=0;jj<lobj[obj["id"]]["dep"].length;jj++){
-                        for(var kk in lobj[obj["id"]]["dep"][jj])
-                            lobj[obj["id"]]["dep"][jj][kk]["options"]=cvalues;
+                        for(var kk in lobj[obj["id"]]["dep"][jj]){
+                            console.log(JSON.stringify(lobj[obj["id"]]["dep"][jj][kk]));
+                            console.log(JSON.stringify(lobj[obj["id"]]["dep"][jj][kk]["options"]));
+                            try{
+                                if(lobj[obj["id"]]["dep"][jj][kk]["options"].length==0)
+                                    lobj[obj["id"]]["dep"][jj][kk]["options"]=cvalues;
+                            }catch(e){
+                                console.log(e);
+                                lobj[obj["id"]]["dep"][jj][kk]["options"]=cvalues;
+                            }
+                            console.log(JSON.stringify(lobj[obj["id"]]["dep"][jj][kk]));
+                        }
                     }
                     changingFields.push(lobj);
                     var tmpCnt=changingFields.length-1;
                     setTimeout(function(){fetchDependencies(obj,cid,changingFields[tmpCnt])},1);
                 }catch(e){
+                    console.log(name+" "+e);
                     window.Android.showToast("  **** "+obj["name"]+" "+e);
                 }
                 return tmpStr;
@@ -373,6 +430,28 @@ function printCurrentType(obj,cid){
     return null;
 }
 
+function printOptionalCheckbox(obj,cid){
+    if(definedSqlTypes.length==0){
+        definedSqlTypes=JSON.parse(window.Android.displayTable("select id,code from mm4me_ftypes where ftype='e' order by name",[]));
+    }
+
+    var res=' <i class="glyphicon glyphicon-eye-close" onclick="if($(this).hasClass(\'glyphicon-eye-close\')) {$(this).parent().parent().next().show();$(this).removeClass(\'glyphicon-eye-close\').addClass(\'glyphicon-eye-open\');}else {$(this).parent().parent().next().hide();$(this).removeClass(\'glyphicon-eye-open\').addClass(\'glyphicon-eye-close\');}"></i> <input type="checkbox" id="'+obj["id"]+'_display" onchange="if($(this).is(\':checked\')) {$(this).parent().parent().next().show();}else {$(this).parent().parent().next().hide();}"/>';
+    for(var i in definedSqlTypes){
+        if(definedSqlTypes[i]["id"]==obj["ftype"]){
+            if(definedSqlTypes[i]["code"]=="bytea"){
+                var tmpStr="";
+                return res;
+            }
+            else if(definedSqlTypes[i]["code"]=="geometry"){
+                return res
+            }
+        }
+    }
+    return '';
+}
+
+var refTypeId=null;
+var editPrintedOnce=[];
 /*****************************************************************************
  * Create HTML part to display the line containing both the title and the
  * corresponding input for a given table's field.
@@ -383,9 +462,9 @@ function printEditionFields(obj,myRoot,cid,mid){
         editSchema[mid]={};
     editSchema[mid][obj["id"]]=JSON.parse(list1);
     list1=JSON.parse(list1);
-    myRoot.find(".tab-content").first().append('<div id="edition_form_'+cid+'" class="well tab-pane" role="tabpanel"></div>');
+    myRoot.find(".tab-content").first().append('<div id="edition_form_'+cid+'" class="well tab-pane" role="tabpanel">'+obj["description"]+'</div>');
     for(var j in list1)
-        if(list1[j]["edition"]>0){
+        if(list1[j]["edition"]>0) {
             myRoot.find(".tab-content").first().children().last().append(
                 '<div class="row form-group" >'+
                 '<div class="col-xs-3">'+
@@ -395,11 +474,184 @@ function printEditionFields(obj,myRoot,cid,mid){
                 printCurrentType(list1[j],mid)+
                 '</div>'+
                 '</div>');
+            if(list1[j]["dependencies"]){
+                try{
+                    editPrintedOnce.push(list1[j]["name"]);
+                    console.log("JSON PARSE")
+                    console.log(list1[j]["dependencies"]);
+                    var objJson=JSON.parse(list1[j]["dependencies"]);
+                    console.log("JSON PARSE OK");
+                    if(!refTypeId)
+                        refTypeId=JSON.parse(window.Android.displayTable("select id from mm4me_ftypes where ftype='e' and code='ref'",[]))[0]["id"];
+                    console.log(refTypeId);
+                    for(i in objJson){
+                        if(objJson[i]["myself"]){
+                            console.log("IS MYSELF!!");
+                            for(k in objJson[i]["myself"]){
+                                for(l in objJson[i]["myself"][k]){
+
+
+                                    if(objJson[i]["myself"][k][l]["dependents"]){
+                                        for(m in objJson[i]["myself"][k][l]["dependents"]){
+                                            for(n in objJson[i]["myself"][k][l]["dependents"][m]){
+                                                console.log(objJson[i]["myself"][k][l]["dependents"][m][n]["sql_query"]);
+                                                console.log(objJson[i]["myself"][k][l]["dependents"][m][n]["label"]);
+                                                var lObj={"id": n, "ftype":refTypeId,"value":objJson[i]["myself"][k][l]["dependents"][m][n]["sql_query"]};
+                                                //if(!myRoot.find('select[name="field_'+list1[j]["id"]+'"]').parent().find('select[name="field_'+n+'"]').length)
+                                                myRoot.find('select[name="field_'+list1[j]["id"]+'"]').last().parent().prepend(
+                                                        '<div class="row form-group" >'+
+                                                        '<div class="col-xs-12">'+
+                                                        '<label for="edit_"'+n+'">'+objJson[i]["myself"][k][l]["dependents"][m][n]["label"]+'</label>'+
+                                                        '</div>'+
+                                                        '<div class="col-xs-12">'+
+                                                        printCurrentType(lObj,mid)+
+                                                        '</div>'+
+                                                        '</div>');
+                                                console.log(myRoot.find('select[name="field_'+n+'"]'));
+                                                console.log(printCurrentType(lObj,mid));
+                                                (function(a,b){
+                                                myRoot.find('select[name="field_'+n+'"]').off('change');
+                                                myRoot.find('select[name="field_'+n+'"]').on('change',function(){
+                                                    console.log('select[name="field_'+n+'"]');
+                                                    var req=cleanupTableName(a["value"]);
+                                                    if(a["value"].indexOf("WHERE")<0){
+                                                        req=req.replace(/order by/g,"where "+b["tfieldf"]+" "+b["operator"]+" "+(b["operator"]=="like"?"'":"")+$(this).val()+(b["operator"]=="like"?"'":"")+" order by")
+                                                    }
+                                                    console.log(req);
+                                                    var res=JSON.parse(window.Android.displayTable(req,[]));
+                                                    myRoot.find('select[name="field_'+a["id"]+'"]').html("");
+                                                    for(ij in res){
+                                                        var tmpStr=' <option value="';
+                                                        var poi=0;
+                                                        for(kl in res[ij]){
+                                                            if(poi==0)
+                                                                tmpStr+=res[ij][kl]+'">';
+                                                            else{
+                                                                tmpStr+=res[ij][kl]+'</otion>';
+                                                                myRoot.find('select[name="field_'+a["id"]+'"]').append(tmpStr);
+                                                            }
+                                                            poi+=1;
+                                                        }
+                                                    }
+
+                                                })
+                                                })(list1[j],objJson[i]["myself"][k][l]["dependents"][m][n]);
+
+                                            }
+                                        }
+                                    }
+
+                                    console.log(objJson[i]["myself"][k][l]["sql_query"]);
+                                    console.log(objJson[i]["myself"][k][l]["label"]);
+                                    var lObj={"id": l,"ftype":refTypeId,"value":objJson[i]["myself"][k][l]["sql_query"]};
+                                    //if(!myRoot.find('select[name="field_'+list1[j]["id"]+'"]').parent().find('select[name="field_'+l+'"]').length)
+                                    myRoot.find('select[name="field_'+list1[j]["id"]+'"]').last().parent().prepend(
+                                            '<div class="row form-group" >'+
+                                           '<div class="col-xs-12">'+
+                                           '<label for="edit_"'+l+'">'+objJson[i]["myself"][k][l]["label"]+'</label>'+
+                                           '</div>'+
+                                           '<div class="col-xs-12">'+
+                                           printCurrentType(lObj,mid)+
+                                           '</div>'+
+                                           '</div>');
+                                    console.log(myRoot.find('select[name="field_'+l+'"]'));
+                                    console.log('select[name="field_'+l+'"]');
+                                    (function(a,b,c,d,e){
+                                        myRoot.find('select[name="field_'+a+'"]').on('change',function(){
+                                            console.log('select[name="field_'+a+'"]');
+                                            if(b["dependents"]){
+                                                for(m in b["dependents"]){
+                                                    for(n in b["dependents"][m]){
+                                                        var req=cleanupTableName(b["dependents"][m][n]["sql_query"]);
+                                                        if(req.indexOf("WHERE")<0)
+                                                            req=req.replace(/order by/g," WHERE "+b["tfield"]+" "+b["operator"]+" "+(b["operator"]=="like"?"'":"")+$(this).val()+(b["operator"]=="like"?"'":"")+" order by ");
+                                                        var res=JSON.parse(window.Android.displayTable(req,[]));
+                                                        myRoot.find('select[name="field_'+n+'"]').html("");
+                                                        for(ij in res){
+                                                            var tmpStr=' <option value="';
+                                                            var poi=0;
+                                                            for(kl in res[ij]){
+                                                                if(poi==0)
+                                                                    tmpStr+=res[ij][kl]+'">';
+                                                                else{
+                                                                    tmpStr+=res[ij][kl]+'</otion>';
+                                                                    myRoot.find('select[name="field_'+n+'"]').append(tmpStr);
+                                                                }
+                                                                poi+=1;
+                                                            }
+                                                        }
+                                                        myRoot.find('select[name="field_'+n+'"]').change();
+                                                    }
+                                                }
+                                            }else{
+                                                var req=cleanupTableName(c["value"]);
+                                                var clause=b["tfield"]+" "+b["operator"]+" "+(b["operator"]=="like"?"'":"")+$(this).val()+(b["operator"]=="like"?"'":"");
+                                                if(d.length>1){
+                                                    for(var i=0;i<d.length;i++){
+                                                        if(i!=e){
+                                                            for(kk in d[i])
+                                                                if($('select[name="field_'+kk+'"]').val()!="")
+                                                                clause+=" "+d[i][kk]["cond_join"]+" "+d[i][kk]["tfield"]+" "+d[i][kk]["operator"]+" "+(d[i][kk]["operator"]=="like"?"'":"")+$('select[name="field_'+kk+'"]').val()+(d[i][kk]["operator"]=="like"?"'":"");
+                                                        }
+                                                    }
+                                                }
+                                                if(req.indexOf("wehere")<0)
+                                                    req=req.replace(/order by/g,"where "+clause+" order by");
+                                                try{
+                                                    var res1=JSON.parse(window.Android.displayTable(req,[]));
+                                                    myRoot.find('select[name="field_'+c["id"]+'"]').html("");
+                                                    for(ij1 in res1){
+                                                        var tmpStr=' <option value="';
+                                                        var poi=0;
+                                                        for(kl1 in res1[ij1]){
+                                                            if(poi==0)
+                                                                tmpStr+=res1[ij1][kl1]+'">';
+                                                            else{
+                                                                tmpStr+=res1[ij1][kl1]+'</otion>';
+                                                                myRoot.find('select[name="field_'+c["id"]+'"]').append(tmpStr);
+                                                            }
+                                                            poi+=1;
+                                                        }
+                                                    }
+                                                    if(b["html_template"]){
+                                                        myRoot.find('select[name="field_'+c["id"]+'"]').off('change');
+                                                        myRoot.find('select[name="field_'+c["id"]+'"]').on('change',function(){
+                                                            if(!$(this).parent().find(".html_layout"))
+                                                                $(this).parent().append('<div class="html_layout"></div>');
+
+                                                        });
+                                                    }
+                                                }catch(e){console.log(e);}
+                                                console.log(req);
+                                            }
+                                        });
+                                    })(l,objJson[i]["myself"][k][l],list1[j],objJson[i]["myself"],k);
+
+                                    //if(objJson[i]["myself"][k][l]["dependents"])
+                                        myRoot.find('select[name="field_'+l+'"]').change();
+
+                                }
+                            }
+                        }else
+                            console.log("Basic dependencies!");
+                    }
+                }catch(e){
+                    console.log(e);
+                }
+            }
+
+
         }
+
     myRoot.find(".tab-content").first().children().last().append(
         '<div class="row btn-group" >'+
         '<button class="btn btn-default mm-act-'+(cid.indexOf('_')<0?'save':'add')+'">'+window.Android.translate((cid.indexOf('_')<0?'save':'add'))+'</button>'+
         '</div>');
+    console.log(JSON.stringify(currentTypes));
+    for(i in currentTypes){
+        console.log(currentTypes[i]);
+        $("#edition_form_"+cid).find("#"+currentTypes[i]).change();
+    }
     myRoot.show();
 }
 
@@ -418,26 +670,29 @@ function runInsertQuery(obj,mid,func){
         if(MM4ME_DEBUG)
             console.log($(this).attr("name")+" <> "+$(this).val());
         try{
-        var cid=$(this).attr("name").replace(/field_/g,"");
-        var found=false;
-        for(var i in editSchema[mid]){
-            for(var j in editSchema[mid][i]){
-                if(editSchema[mid][i][j]["id"]==cid){
-                    if(editSchema[mid][i][j]["name"].indexOf("unamed")<0){
-                    if(MM4ME_DEBUG)
-                        console.log(editSchema[mid][i][j]["name"]+" <> "+$(this).val());
-                    queryAttr.push(editSchema[mid][i][j]["name"].replace(/wkb_geometry/g,"geometry"));
-                    queryValues.push($(this).val());
-                    queryValues0.push("?");
-                    queryTypes.push(parseInt(editSchema[mid][i][j]["ftype"]));
+
+            var cid=$(this).attr("name").replace(/field_/g,"");
+            console.log(!$("#"+cid+"_display").length || ($("#"+cid+"_display").length && $("#"+cid+"_display").is(":checked")));
+            var found=false;
+            if((!$("#"+cid+"_display").length || ($("#"+cid+"_display").length && $("#"+cid+"_display").is(":checked"))))
+                for(var i in editSchema[mid]){
+                    for(var j in editSchema[mid][i]){
+                        if(editSchema[mid][i][j]["id"]==cid){
+                            if(editSchema[mid][i][j]["name"].indexOf("unamed")<0 && $(this).parent().is(":visible")){
+                            if(MM4ME_DEBUG)
+                                console.log(editSchema[mid][i][j]["name"]+" <> "+$(this).val());
+                            queryAttr.push(editSchema[mid][i][j]["name"].replace(/wkb_geometry/g,"geometry"));
+                            queryValues.push($(this).val());
+                            queryValues0.push("?");
+                            queryTypes.push(parseInt(editSchema[mid][i][j]["ftype"]));
+                            }
+                            found=true;
+                            break;
+                        }
                     }
-                    found=true;
-                    break;
+                    if(found)
+                        break;
                 }
-            }
-            if(found)
-                break;
-        }
         }catch(e){
             console.log(e);
         }
@@ -449,7 +704,7 @@ function runInsertQuery(obj,mid,func){
 
     for(var i in editSchema[mid]){
         for(var j in editSchema[mid][i]){
-            if(editSchema[mid][i][j]["ftype"]==EDITION_TYPE_FILE){
+            if(editSchema[mid][i][j]["ftype"]==EDITION_TYPE_FILE && $("#"+editSchema[mid][i][j]["id"]+"_display").length && $("#"+editSchema[mid][i][j]["id"]+"_display").is(":checked") ){
                 queryAttr.push(editSchema[mid][i][j]["name"]);
                 queryValues0.push("?");
                 queryTypes.push(parseInt(editSchema[mid][i][j]["ftype"]));
@@ -476,10 +731,16 @@ function runInsertQuery(obj,mid,func){
     }
     var res=window.Android.executeQuery(req,queryValues,queryTypes);
     window.Android.executeQuery("INSERT INTO history_log (tbl,sql,pkey_value) VALUES (?,?,"+osubquery+")",[cleanupTableName(allTables[mid].name),req],[1,1]);
-    func(mid);
+    try{
+        window.Android.showToast(window.Android.translate("insert_success"));
+        func(mid);
+    }catch(e){
+        window.Android.notify("Error: "+e);
+    }
 
 }
 
+var systemSelectedIndex=-1;
 /*****************************************************************************
  * Execute an Update SQL query for a given table
  *****************************************************************************/
@@ -489,7 +750,7 @@ function runUpdateQuery(obj,mid,func){
     var queryValues0=[];
     var queryValues=[];
     var queryTypes=[];
-    var lastValue=$("#exampleTable"+((mid==mtable)?"":"_"+mid)).find(".selected").find('input[type=hidden]').first().val();
+    var lastValue=$("#exampleTable"+((mid==mtable)?"":"_"+mid)).find(".selected").find('input[type=hidden]').first().val()?$("#exampleTable"+((mid==mtable)?"":"_"+mid)).find(".selected").find('input[type=hidden]').first().val():systemSelectedIndex;
     var ccol=getPKey(cleanupTableName(allTables[mid].name));
     var queryEnd=" WHERE "+ccol+"=?";
     var lcnt=0;
@@ -498,11 +759,14 @@ function runUpdateQuery(obj,mid,func){
             console.log($(this).attr("name")+" <> "+$(this).val());
         try{
         var cid=$(this).attr("name").replace(/field_/g,"");
+        console.log($(this).parent().is(":visible"));
         var found=false;
+        if($(this).parent().is(":visible") || $(this).is(":visible"))
         for(var i in editSchema[mid]){
             for(var j in editSchema[mid][i]){
                 if(editSchema[mid][i][j]["id"]==cid){
                     if(editSchema[mid][i][j]["name"].indexOf("unamed")<0){
+                    //console.log(JSON.stringify(editSchema[mid][i][j]));
                     if(MM4ME_DEBUG)
                         console.log(editSchema[mid][i][j]["name"]+" <> "+$(this).val());
                     query+=(lcnt>0?", ":"")+editSchema[mid][i][j]["name"].replace(/wkb_geometry/g,"geometry")+"=?";
@@ -526,7 +790,7 @@ function runUpdateQuery(obj,mid,func){
     });
     for(var i in editSchema[mid]){
         for(var j in editSchema[mid][i]){
-            if(editSchema[mid][i][j]["ftype"]==EDITION_TYPE_FILE){
+            if(editSchema[mid][i][j]["ftype"]==EDITION_TYPE_FILE && $(obj).find("#value_"+editSchema[mid][i][j]["id"]).find("img").length && $("#"+editSchema[mid][i][j]["id"]+"_display").length && $("#"+editSchema[mid][i][j]["id"]+"_display").is(":checked") ){
                 //queryAttr.push(editSchema[mid][i][j]["name"]);
                 query+=(lcnt>0?", ":"")+editSchema[mid][i][j]["name"]+"=?";
                 queryTypes.push(parseInt(editSchema[mid][i][j]["ftype"]));
@@ -544,6 +808,7 @@ function runUpdateQuery(obj,mid,func){
         console.log(req);
     if(window.Android.executeQuery(req,queryValues,queryTypes)>=0){
         window.Android.executeQuery("INSERT INTO history_log (tbl,sql,pkey_value) VALUES (?,?,?)",[cleanupTableName(allTables[mid].name),req,lastValue],[1,1,1]);
+        window.Android.showToast(window.Android.translate("update_success"));
         func(mid);
     }
 }
@@ -559,6 +824,19 @@ function getPKey(tbl){
     if(MM4ME_DEBUG)
         console.log(JSON.stringify(list01[0]));
     return list01[0]["col"];
+}
+
+/*****************************************************************************
+ * Get the geometry type, stored in the mm4me_gc table
+ *****************************************************************************/
+function getGeometryType(tbl){
+    var req0="select type from mm4me_gc where f_table_schema||'_'||f_table_name = "+tbl+"";
+    if(MM4ME_DEBUG)
+        console.log(req0);
+    var list01=JSON.parse(window.Android.displayTable(req0,[]));
+    if(MM4ME_DEBUG)
+        console.log(JSON.stringify(list01[0]));
+    return list01[0]["type"];
 }
 
 /*****************************************************************************
@@ -588,7 +866,7 @@ function listTable(id,name,title,init,prefix){
     tblName=name;
     tblTitle=title;
 
-    var list=window.Android.displayTable("select mm4me_editions.id,mm4me_editions.name from mm4me_editions,mm4me_tables where mm4me_editions.ptid=mm4me_tables.id and mm4me_tables.id="+tblId+" and step>=0 order by mm4me_editions.step asc",[]);
+    var list=window.Android.displayTable("select mm4me_editions.id,mm4me_editions.name,mm4me_editions.description from mm4me_editions,mm4me_tables where mm4me_editions.ptid=mm4me_tables.id and mm4me_tables.id="+tblId+" and step>=0 order by mm4me_editions.step asc",[]);
     if(MM4ME_DEBUG)
         console.log(list);
     list=JSON.parse(list);
@@ -747,37 +1025,63 @@ function listTable(id,name,title,init,prefix){
     $('.mm4me_content').hide();
 }
 
+/*****************************************************************************
+ * Update a field depending on another field value (i.e region > department)
+ *****************************************************************************/
 function updateChangingFields(changingFields){
-    console.log(JSON.stringify(changingFields));
+    if(MM4ME_DEBUG)
+        console.log(JSON.stringify(changingFields));
     try{
     for(var i=0;i<changingFields.length;i++){
         for(var key in changingFields[i]){
             var localFunc=function(changingField){
                 return function(){
                     for(var j=0;j<changingField.length;j++){
-                        for(var ckey in changingField[j]){
+                        for(var ckey in changingField[j])
+                        if (ckey!="myself"){
+                            console.log("CKEY: "+ckey);
                             var i=0;
-                            $(this).parent().parent().parent().find("select[name=field_"+changingField[j][ckey]["id"]+"]").html("");
                             var cIndex=changingField[j][ckey]["options"].indexOf($(this).val());
-                            //window.Android.showToast(cIndex+" "+changingField[j][ckey]["values"][cIndex]);
-                            var cnt0=0;
-                            for(i=0;i<changingField[j][ckey]["values"][cIndex].length;i++){
-                                var cnt=0;
-                                var cStr="<option ";
-                                for(var lkey in changingField[j][ckey]["values"][cIndex][i]){
-                                    if(cnt==0)
-                                        cStr+=' value="'+changingField[j][ckey]["values"][cIndex][i][lkey]+'"'+(cnt0==0?'" selected="selected"':'')+' >';
-                                    else
-                                        cStr+=changingField[j][ckey]["values"][cIndex][i][lkey]+'</option>';
-                                    cnt+=1;
-                                }
-                                cnt0+=1;
-                                $("select[name=field_"+changingField[j][ckey]["id"]+"]").append(cStr);
-                            }
-                            if(i==0)
-                                $("select[name=field_"+changingField[j][ckey]["id"]+"]").html('<option value="NULL">'+window.Android.translate('none')+'</option>');
-                            $("select[name=field_"+changingField[j][ckey]["id"]+"]").change();
+                            if(cIndex==-1)
+                                try{
+                                    cIndex=changingField[j][ckey]["options"].indexOf(parseInt($(this).val(),10));
+                                }catch(e){}
+                            console.log("CKEY: "+ckey+" "+cIndex);
+                            console.log("CKEY: "+JSON.stringify(changingField[j][ckey]["options"])+" "+$(this).val());
 
+                            if(changingField[j][ckey]["values"][cIndex]){
+                                console.log(cIndex);
+                                $(this).parent().parent().parent().find("select[name=field_"+changingField[j][ckey]["id"]+"]").html("");
+                                //window.Android.showToast(cIndex+" "+changingField[j][ckey]["values"][cIndex]);
+                                var cnt0=0;
+                                for(i=0;i<changingField[j][ckey]["values"][cIndex].length;i++){
+                                    var cnt=0;
+                                    var cStr="<option ";
+                                    for(var lkey in changingField[j][ckey]["values"][cIndex][i]){
+                                        console.log(changingField[j][ckey]["values"][cIndex][i][lkey]);
+                                        if(cnt==0)
+                                            cStr+=' value="'+changingField[j][ckey]["values"][cIndex][i][lkey]+'"'+(cnt0==0?'" selected="selected"':'')+' >';
+                                        else
+                                            cStr+=changingField[j][ckey]["values"][cIndex][i][lkey]+'</option>';
+                                        cnt+=1;
+                                    }
+                                    cnt0+=1;
+                                    $("select[name=field_"+changingField[j][ckey]["id"]+"]").append(cStr);
+                                }
+                                if(i==0)
+                                    $("select[name=field_"+changingField[j][ckey]["id"]+"]").html('<option value="NULL">'+window.Android.translate('none')+'</option>');
+                                $("select[name=field_"+changingField[j][ckey]["id"]+"]").change();
+                            }else{
+                                console.log("DISPLAY ELEMENT IF CINDEX >=0 ");
+                                //console.log(JSON.stringify(changingField[j][ckey]));
+                                console.log('input[name="field_'+ckey+'"],select[name="field_'+ckey+'"],textarea[name="field_'+ckey+'"]');
+                                console.log($('input[name="field_'+changingField[j][ckey]["id"]+'"],select[name="field_'+changingField[j][ckey]["id"]+'"],textarea[name="field_'+changingField[j][ckey]["id"]+'"]').parent().parent().html());
+                                var mycKey=changingField[j][ckey]["id"];
+                                if(cIndex<0)
+                                    $('input[name="field_'+mycKey+'"],select[name="field_'+mycKey+'"],textarea[name="field_'+mycKey+'"]').parent().parent().hide();
+                                else
+                                    $('input[name="field_'+mycKey+'"],select[name="field_'+mycKey+'"],textarea[name="field_'+mycKey+'"]').parent().parent().show();
+                            }
                         }
                     }
                 };
@@ -792,6 +1096,7 @@ function updateChangingFields(changingFields){
         setTimeout(function() { updateChangingFields(changingFields) }, 500);
     }
 }
+
 /*****************************************************************************
  * Display the content of a table referencing the current edited table.
  *****************************************************************************/
@@ -932,6 +1237,10 @@ function listInnerTable(id,vid,name,title,init,prefix,clause,ref){
 
 }
 
+var onFormFirstLoad=null;
+/*****************************************************************************
+ * Show the edit form
+ *****************************************************************************/
 function displayEditForm(cid,selectedId,basic){
     if(basic && !$("#exampleTable"+(cid==mtable?"":"_"+cid)).find(".selected").find('input[type=hidden]').first().val()){
         if(cid==mtable){
@@ -947,21 +1256,188 @@ function displayEditForm(cid,selectedId,basic){
         return;
     }
     var fields=[]
+    var sizedFields=[];
+    var sizedFieldsAlias=[];
+    var notSizedFields=[];
     for(var i in editSchema[cid]){
         for(var j in editSchema[cid][i]){
+            //console.log(JSON.stringify(editSchema[cid][i][j]));
+            if(editSchema[cid][i][j]["ftype"]=="5"){
+                sizedFields.push(editSchema[cid][i][j]["name"].replace(/wkb_geometry/g,"geometry"));
+                sizedFieldsAlias.push(editSchema[cid][i][j]["id"]);
+            }
+            else{
+                notSizedFields.push(editSchema[cid][i][j]["name"].replace(/wkb_geometry/g,"geometry")+" AS \""+editSchema[cid][i][j]["id"]+"\"");
+                try{
+                    var tmp=JSON.parse(editSchema[cid][i][j]["dependencies"]);
+                    var sqlReq="";
+                    var sqlClause="";
+                    var sqlParams="";
+                    var sqlParam=0;
+                    var alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+                    var hasDep=false;
+                    var previousElements=[];
+                    for(k in tmp)
+                        for(l in tmp[k]){
+                            //console.log(JSON.stringify(tmp[k][l]));
+                            if(l=="myself"){
+                                for(m in tmp[k][l])
+                                    for(n in tmp[k][l][m]){
+                                            //console.log(JSON.stringify(tmp[k][l][m][n]));
+                                            if(sqlReq!=""){
+                                                sqlReq+=", ";
+                                                sqlParams+=", ";
+                                                //sqlClause+=" WHERE "+alphabet[sqlParam-1]+"."+tmp[k][l][m][n]["tfield"]+"="+alphabet[sqlParam]+"."+tmp[k][l][m][n]["tfield"];
+
+                                            }
+                                            sqlReq+="("+cleanupTableName(tmp[k][l][m][n]["sql_query"])+") as "+alphabet[sqlParam];
+                                            sqlParams+=alphabet[sqlParam]+"."+tmp[k][l][m][n]["tfield"];
+                                            sqlParam+=1;
+                                            if(tmp[k][l][m][n]["dependents"]){
+                                                //console.log(JSON.stringify(tmp[k][l][m][n]["dependents"]));
+                                                for(var o in tmp[k][l][m][n]["dependents"]){
+                                                    //console.log(JSON.stringify(tmp[k][l][m][n]["dependents"][o]));
+                                                    for(var p in tmp[k][l][m][n]["dependents"][o]){
+                                                        console.log(tmp[k][l][m][n]["dependents"][o][p]["sql_query"].replace(/from/,","+tmp[k][l][m][n]["dependents"][o][p]["tfield"]+" from"));
+                                                        sqlReq+=", ("+cleanupTableName(tmp[k][l][m][n]["dependents"][o][p]["sql_query"]).replace(/from/,","+tmp[k][l][m][n]["dependents"][o][p]["tfield"]+" from")+") as b";
+                                                        sqlParams+=", b."+tmp[k][l][m][n]["dependents"][o][p]["tfieldf"];
+                                                        sqlParam+=2;
+                                                        sqlReq+=", ("+cleanupTableName(editSchema[cid][i][j]["value"]).replace(/from/,","+tmp[k][l][m][n]["dependents"][o][p]["tfieldf"]+" from")+") as c";
+
+                                                        sqlClause+=" WHERE c."+tmp[k][l][m][n]["dependents"][o][p]["tfieldf"]+"=b."+tmp[k][l][m][n]["dependents"][o][p]["tfieldf"];
+                                                        sqlClause+=" AND b."+tmp[k][l][m][n]["tfield"]+"=a."+tmp[k][l][m][n]["tfield"];
+                                                        sqlClause+=" AND c.id=(SELECT "+editSchema[cid][i][j]["name"]+" FROM "+cleanupTableName(allTables[cid].name)+" where id="+selectedId+")";
+                                                        hasDep=true;
+                                                    }
+                                                }
+                                            }
+                                    }
+                                if(!hasDep){
+                                    var tmpReq=cleanupTableName(editSchema[cid][i][j]["value"]);
+                                    for(m in tmp[k][l])
+                                        for(n in tmp[k][l][m]){
+                                            tmpReq=tmpReq.replace(/from/,","+tmp[k][l][m][n]["tfield"]+" from");
+                                            if(sqlClause=="")
+                                                sqlClause+=" WHERE ";
+                                            else
+                                                sqlClause+=" "+tmp[k][l][m][n]["cond_join"]+" ";
+                                            sqlClause+=alphabet[m]+"."+tmp[k][l][m][n]["tfield"]+"=a1."+tmp[k][l][m][n]["tfield"];
+                                            sqlClause+="";
+                                        }
+                                    sqlClause+=" AND a1.id=(SELECT "+editSchema[cid][i][j]["name"]+" FROM "+cleanupTableName(allTables[cid].name)+" where id="+selectedId+")";
+                                    //sqlReq=(tmpReq);
+                                    console.log(tmpReq);
+                                    sqlReq+=", ("+tmpReq+") as a1";
+                                }
+                                //console.log(JSON.stringify(tmp[k][l]));
+                                console.log("SELECT "+sqlParams+" FROM "+sqlReq+" "+sqlClause);
+                                var localQuery="SELECT "+sqlParams+" FROM "+sqlReq+" "+sqlClause;
+                                var res0=JSON.parse(window.Android.displayTable(localQuery,[]));
+                                console.log(JSON.stringify(res0));
+                                for(m in res0)
+                                    for(n in res0[m]){
+                                        try{
+                                            console.log("input[name=field_"+n+"],select[name=field_"+n+"],textarea[name=field_"+n+"]");
+                                            /**/
+                                            if($('.mm4me_edition').find("input[name=field_"+n+"],select[name=field_"+n+"],textarea[name=field_"+n+"]").first().length)
+                                                $('.mm4me_edition').find("input[name=field_"+n+"],select[name=field_"+n+"],textarea[name=field_"+n+"]").first().val(res0[m][n]).change();
+                                            else{
+                                                for(m0 in tmp[k][l])
+                                                        for(n0 in tmp[k][l][m0]){
+                                                            /*console.log(n0.indexOf(n)<0);
+                                                            console.log(n);
+                                                            console.log(n0);
+                                                            console.log(res0[m][n]);*/
+                                                            if(n0.indexOf(n)>=0){
+                                                                console.log("input[name=field_"+n0+"],select[name=field_"+n0+"],textarea[name=field_"+n0+"]");
+                                                                if(!$('.mm4me_edition').find("input[name=field_"+n+"],select[name=field_"+n+"],textarea[name=field_"+n+"]").first().length)
+                                                                    $('.mm4me_edition').find("input[name=field_"+n0+"],select[name=field_"+n0+"],textarea[name=field_"+n0+"]").first().val(res0[m][n]).change();
+                                                            }
+                                                        }
+                                            }
+                                        }catch(e){
+                                            console.log(e);
+                                        }
+
+                                    }
+                                //if(tmp[k][l]["dependents"])
+                            }else{
+                                console.log(JSON.stringify(tmp[k][l]));
+                                if(tmp[k][l]["tfield"]=="none"){
+                                    var isNull=JSON.parse(window.Android.displayTable("SELECT CASE WHEN "+l+" is null THEN 1 ELSE 0 END as p FROM "+cleanupTableName(allTables[cid].name)+" where id="+selectedId,[]));
+                                    console.log(JSON.stringify(isNull));
+                                    if(isNull[0]["p"]=="0"){
+                                        console.log(JSON.stringify(isNull));
+                                        console.log("input[name=field_"+editSchema[cid][i][j]["id"]+"],select[name=field_"+editSchema[cid][i][j]["id"]+"],textarea[name=field_"+editSchema[cid][i][j]["id"]+"]");
+                                        console.log(k+"");
+                                        $('.mm4me_edition').find("input[name=field_"+editSchema[cid][i][j]["id"]+"],select[name=field_"+editSchema[cid][i][j]["id"]+"],textarea[name=field_"+editSchema[cid][i][j]["id"]+"]").first().val(k+"").change();
+                                    }
+                                }
+
+                            }
+                        }
+
+                    //if(sqlReq)
+                }catch(e){
+                    console.log(e);
+                }
+            }
             if(editSchema[cid][i][j]["name"].indexOf("unamed")<0)
                 fields.push(editSchema[cid][i][j]["name"].replace(/wkb_geometry/g,"geometry")+" AS \""+editSchema[cid][i][j]["id"]+"\"");
         }
     }
     var ccol=getPKey(cleanupTableName(allTables[cid].name));
     /* $("#exampleTable"+(cid==mtable?"":"_"+cid)).find(".selected").find('input[type=hidden]').first().val() */
-    var editValues=window.Android.displayTable("select "+ccol+" as local_id,"+fields.join(", ")+" from "+cleanupTableName(allTables[cid].name)+" where "+ccol+"="+selectedId,[]);
-    editValues=JSON.parse(editValues);
+    var editValues;
+    if(sizedFields.length>0){
+        for(var i=0;i<sizedFields.length;i++){
+            var hasElement=JSON.parse(window.Android.displayTable("select count("+sizedFields[i]+") as cnt, length("+sizedFields[i]+") as len from "+cleanupTableName(allTables[cid].name)+" where length("+sizedFields[i]+") > 1000000 and "+ccol+"="+selectedId,[]));
+            //console.log(JSON.stringify(hasElement[0]));
+            if(hasElement[0]["cnt"]!="0"){
+                var nbIteration=parseInt(hasElement[0]["len"])/1000000;
+                var zfields=[]
+                var len=0;
+                var query="";
+                var len1=parseInt(hasElement[0]["len"]);
+                for(var j=0;j<len1;j+=1000000){
+                    if((j+1000000)<=len1)
+                        zfields.push("substr("+sizedFields[i]+","+(j+1)+","+1000000+") as mm_chunk");
+                    else
+                        zfields.push("substr("+sizedFields[i]+","+(j+1)+","+((len1-(j+1)))+") as mm_chunk");
+
+                    len+=1;
+                    if(query!="")
+                        query+=" UNION ";
+                    query+=" SELECT "+zfields[zfields.length-1]+" from "+cleanupTableName(allTables[cid].name)+" WHERE "+ccol+"="+selectedId+" ";
+                }
+                var chunks=null;
+                try{
+                    console.log(query);
+                    chunks=JSON.parse(window.Android.rebuildChunk(query,[]));
+                }catch(e){
+                    alert("RebuildChunk "+e);
+                }
+                editValues=window.Android.displayTable("select "+ccol+" as local_id,"+notSizedFields.join(", ")+" from "+cleanupTableName(allTables[cid].name)+" where "+ccol+"="+selectedId,[]);
+                editValues=JSON.parse(editValues);
+                editValues[0][sizedFieldsAlias[i]]=chunks[0]["mm_chunk"];
+            }
+            else{
+                editValues=window.Android.displayTable("select "+ccol+" as local_id,"+fields.join(", ")+" from "+cleanupTableName(allTables[cid].name)+" where "+ccol+"="+selectedId,[]);
+                editValues=JSON.parse(editValues);
+            }
+        }
+    }else{
+        editValues=window.Android.displayTable("select "+ccol+" as local_id,"+fields.join(", ")+" from "+cleanupTableName(allTables[cid].name)+" where "+ccol+"="+selectedId,[]);
+        editValues=JSON.parse(editValues);
+
+    }
 
     for(var i in editValues){
         referenceIds[cid]=editValues[i]["local_id"];
         for(var j in editValues[i]){
             if($("#value_"+j).length){
+                console.log("#value_"+j);
+                console.log(editValues[i][j]);
                 $("#value_"+j).html(editValues[i][j]);
             }
             else{
@@ -978,6 +1454,15 @@ function displayEditForm(cid,selectedId,basic){
                     }
                 }
             });
+            if($("#field_"+j+"_map").length>0){
+                $("#field_"+j+"_map").show();
+                $("#field_"+j+"_map").off('click');
+                $("#field_"+j+"_map").on('click',function(){
+                    console.log("Display table with a selected feature");
+                    console.log($(this).prev().val());
+                    showElementOnMap($(this).prev().val());
+                });
+            }
                 if($(".btn_field_"+j+"_lat").length>0){
                     //alert(editValues[i][j]);
                     $(".btn_field_"+j+"_lat").html(editValues[i][j]);
@@ -1026,12 +1511,12 @@ function displayEditForm(cid,selectedId,basic){
 }
 
 /*****************************************************************************
- * The fucntion to call at the end of insert or update query (edit only)
+ * The function to call at the end of insert or update query (edit only)
  *****************************************************************************/
 function editOnlyTableReact(tid){
     var mid=tid;
     if(MM4ME_DEBUG)
-        console.log("editTableReact("+mid+')');
+        console.log("editOnlyTableReact("+mid+')');
     if(mid==mtable){
         $('.mm4me_listing').find('ul').first().find('a').first().click();
         var ccol=getPKey(cleanupTableName(allTables[mid].name));
@@ -1040,6 +1525,7 @@ function editOnlyTableReact(tid){
         $(".mm-act-add").removeClass("mm-act-add").addClass("mm-act-save").html(window.Android.translate("save")).off("click").click(function(){
             runUpdateQuery($(this).parent().parent(),mainTable[id],editOnlyTableReact);
         });
+        systemSelectedIndex=list[0].val;
         displayEditForm(mid,list[0].val,false);
     }
 }
@@ -1052,7 +1538,7 @@ function listEdit(id,name,title,init,prefix){
     tblName=name;
     tblTitle=title;
 
-    var list=window.Android.displayTable("select mm4me_editions.id,mm4me_editions.name from mm4me_editions,mm4me_tables where mm4me_editions.ptid=mm4me_tables.id and mm4me_tables.id="+tblId+" and step>=0 order by mm4me_editions.step asc",[]);
+    var list=window.Android.displayTable("select mm4me_editions.id,mm4me_editions.name,mm4me_editions.description from mm4me_editions,mm4me_tables where mm4me_editions.ptid=mm4me_tables.id and mm4me_tables.id="+tblId+" and step>=0 order by mm4me_editions.step asc",[]);
     if(MM4ME_DEBUG)
         console.log(list);
     list=JSON.parse(list);
@@ -1072,6 +1558,8 @@ function listEdit(id,name,title,init,prefix){
         $(".mm4me_edition").find("ul").first().append('<li role="presentation" id="edition_link_'+cid+'"><a data-toggle="tab" href="#edition_form_'+cid+'">'+list[i]["name"]+'</a></li>');
         printEditionFields(list[i],$("#edition_form_edit"),cid,mainTable[id]);
     }
+    if(list.length==1)
+        $(".mm4me_edition").find("ul").first().hide();
 
     var aCnt=0;
     $('.mm4me_edition').find('ul').first().find('a').each(function () {
@@ -1132,6 +1620,9 @@ function listEdit(id,name,title,init,prefix){
 
 }
 
+/*****************************************************************************
+ * In case no server is configured
+ *****************************************************************************/
 function displayNoListing(){
     $.ajax({
         method: "GET",
@@ -1149,6 +1640,9 @@ function displayNoListing(){
 }
 
 
+/*****************************************************************************
+ * Authenticate a user
+ *****************************************************************************/
 function authenticate(url,login,passwd,func,func1){
     var curl=url+"?service=WPS&request=Execute&version=1.0.0&Identifier=authenticate.clogIn&DataInputs=login="+login+";password="+passwd+"&RawDataOutput=Result";
     console.log(curl);
@@ -1160,8 +1654,10 @@ function authenticate(url,login,passwd,func,func1){
         success: function(data){
             if(MM4ME_DEBUG)
                 console.log(data);
-            if(func)
+            if(func){
+                console.log("Call func!")
                 func();
+            }
         },
         error: function(){
             if(func1){
@@ -1186,9 +1682,13 @@ function authenticate(url,login,passwd,func,func1){
     });
 }
 
+/*****************************************************************************
+ * Disconnect a user
+ *****************************************************************************/
 function disconnect(url){
     var curl=url+"?service=WPS&request=Execute&version=1.0.0&Identifier=authenticate.clogOut&DataInputs=&RawDataOutput=Result";
-    console.log(curl);
+    if(MM4ME_DEBUG)
+        console.log(curl);
     $.ajax({
         method: "GET",
         url: curl,
@@ -1207,6 +1707,374 @@ function disconnect(url){
     });
 }
 
+var geometries={"line":{"geom":null,"constructor": "ol.geom.Linestring"},"polygon":{"geom":null,"constructor":"ol.geom.Polygon","cline":null}};
+var stopTracking=false;
+var currentGeometry="line";
+var currentGeometryField="none";
+var map=null;
+var vectorLayer,vectorLayer1;
+var position;
+
+/*****************************************************************************
+ * Track modification of the GPS location
+ *****************************************************************************/
+function trackCurrentGPSPosition(){
+    console.log("## trackCurrentGPSPosition");
+    updateCurrentMapLocation();
+
+    var tmp0=geometries["origin"].getCoordinates();
+    if(geometries[currentGeometry]["geom"]!=null){
+        var tmp1=geometries[currentGeometry]["geom"].getCoordinates();
+        tmp0=tmp1[tmp1.length-1];
+    }
+    tmp=ol.proj.transform([position[bestIndex].lon,position[bestIndex].lat], 'EPSG:4326','EPSG:3857');
+    console.log(JSON.stringify(tmp0));
+    console.log(JSON.stringify(tmp));
+    $("#currentPosition").html("<b>Position: "+position[bestIndex].lon.toFixed(6)+","+position[bestIndex].lat.toFixed(6)+"</b>");
+    if(tmp0[0]==tmp[0] && tmp0[1]==tmp[1]){
+        console.log(" !!!!!!!! Same position!!!!!!!! ");
+        if(!stopTracking)
+            setTimeout(function() { trackCurrentGPSPosition();}, 1000);
+        return;
+    }
+
+    console.log(JSON.stringify(tmp0));
+    console.log(JSON.stringify(tmp));
+    if(geometries[currentGeometry]["geom"]==null){
+        //geometries[currentGeometry]=new geometries[currentGeometry]["constructor"]([tmp0,tmp]);
+        if(currentGeometry=="line")
+            geometries[currentGeometry]["geom"]=new ol.geom.LineString([tmp0,tmp]);
+        else
+            geometries[currentGeometry]["geom"]=new ol.geom.LineString([tmp0,tmp]);
+    }else{
+        if(currentGeometry=="line"){
+            tmpCoordinates=geometries[currentGeometry]["geom"].getCoordinates();
+            tmpCoordinates.push(tmp);
+            geometries[currentGeometry]["geom"]=new ol.geom.LineString(tmpCoordinates);
+        }
+        else{
+            if(geometries[currentGeometry]["cline"]==null)
+                tmpCoordinates=geometries[currentGeometry]["geom"].getCoordinates();
+            else
+                tmpCoordinates=geometries[currentGeometry]["cline"].getCoordinates();
+            console.log(JSON.stringify(tmpCoordinates));
+            tmpCoordinates.push(tmp);
+            console.log(JSON.stringify(tmpCoordinates));
+            if(tmpCoordinates.length>2){
+                geometries[currentGeometry]["cline"]=new ol.geom.LineString(tmpCoordinates);
+                tmpCoordinates.push(tmpCoordinates[0]);
+                console.log(JSON.stringify(tmpCoordinates));
+                geometries[currentGeometry]["geom"]=new ol.geom.Polygon();
+                console.log(JSON.stringify(tmpCoordinates));
+                geometries[currentGeometry]["geom"].appendLinearRing(new ol.geom.LinearRing(tmpCoordinates));
+                console.log(JSON.stringify(tmpCoordinates));
+            }
+        }
+
+    }
+    console.log(JSON.stringify(tmp0));
+    console.log(JSON.stringify(tmp));
+    try{
+    console.log(JSON.stringify(geometries[currentGeometry]["geom"].getCoordinates()));
+    var feature=new ol.Feature({geometry: geometries[currentGeometry]["geom"],"name":"myFeature"});
+    vectorLayer1.getSource().clear();
+    vectorLayer1.getSource().addFeatures([feature]);
+    var wkt=new ol.format.WKT();
+    var tmpGeometry=geometries[currentGeometry]["geom"].clone().transform('EPSG:3857', 'EPSG:4326');
+    console.log(wkt.writeGeometry(tmpGeometry));
+    $("input[name='"+currentGeometryField+"']").val(wkt.writeGeometry(tmpGeometry));
+    }catch(e){
+    console.log(e);
+    }
+    console.log(JSON.stringify(tmp0));
+    console.log(JSON.stringify(tmp));
+    if(!stopTracking)
+        setTimeout(function() { trackCurrentGPSPosition();}, 1000);
+    console.log(JSON.stringify(tmp0));
+    console.log(JSON.stringify(tmp));
+}
+
+var modalCallback=null;
+
+function trackStepCurrentGPSPosition(){
+    console.log("## trackStepCurrentGPSPosition");
+    updateCurrentMapLocation();
+    $("#currentPosition").html("<b>Position: "+position[bestIndex].lon.toFixed(6)+","+position[bestIndex].lat.toFixed(6)+"</b>");
+    if(!stopTracking)
+        setTimeout(function() { trackStepCurrentGPSPosition();}, 1000);
+}
+
+function addCurrentLocation(){
+    console.log("addCurrentLocation!!!!");
+    if(geometries["origin"]==null)
+        geometries["origin"]=new ol.geom.Point(ol.proj.transform([position[bestIndex].lon,position[bestIndex].lat], 'EPSG:4326','EPSG:3857'));
+    else{
+        var tmp0=geometries["origin"].getCoordinates();
+        if(geometries[currentGeometry]["geom"]!=null){
+            var tmp1=geometries[currentGeometry]["geom"].getCoordinates();
+            tmp0=tmp1[tmp1.length-1];
+        }
+        tmp=ol.proj.transform([position[bestIndex].lon,position[bestIndex].lat], 'EPSG:4326','EPSG:3857');
+        console.log(JSON.stringify(tmp0));
+        console.log(JSON.stringify(tmp));
+        $("#currentPosition").html("<b>Position: "+position[bestIndex].lon.toFixed(6)+","+position[bestIndex].lat.toFixed(6)+"</b>");
+        if(geometries[currentGeometry]["geom"]==null){
+            //geometries[currentGeometry]=new geometries[currentGeometry]["constructor"]([tmp0,tmp]);
+            if(currentGeometry=="line")
+                geometries[currentGeometry]["geom"]=new ol.geom.LineString([tmp0,tmp]);
+            else
+                geometries[currentGeometry]["geom"]=new ol.geom.LineString([tmp0,tmp]);
+        }else{
+            if(currentGeometry=="line"){
+                tmpCoordinates=geometries[currentGeometry]["geom"].getCoordinates();
+                tmpCoordinates.push(tmp);
+                geometries[currentGeometry]["geom"]=new ol.geom.LineString(tmpCoordinates);
+            }
+            else{
+                if(geometries[currentGeometry]["cline"]==null)
+                    tmpCoordinates=geometries[currentGeometry]["geom"].getCoordinates();
+                else
+                    tmpCoordinates=geometries[currentGeometry]["cline"].getCoordinates();
+                console.log(JSON.stringify(tmpCoordinates));
+                tmpCoordinates.push(tmp);
+                console.log(JSON.stringify(tmpCoordinates));
+                if(tmpCoordinates.length>2){
+                    geometries[currentGeometry]["cline"]=new ol.geom.LineString(tmpCoordinates);
+                    tmpCoordinates.push(tmpCoordinates[0]);
+                    console.log(JSON.stringify(tmpCoordinates));
+                    geometries[currentGeometry]["geom"]=new ol.geom.Polygon();
+                    console.log(JSON.stringify(tmpCoordinates));
+                    geometries[currentGeometry]["geom"].appendLinearRing(new ol.geom.LinearRing(tmpCoordinates));
+                    console.log(JSON.stringify(tmpCoordinates));
+                }
+            }
+
+        }
+        try{
+            console.log(JSON.stringify(geometries[currentGeometry]["geom"].getCoordinates()));
+            var feature=new ol.Feature({geometry: geometries[currentGeometry]["geom"],"name":"myFeature"});
+            vectorLayer1.getSource().clear();
+            vectorLayer1.getSource().addFeatures([feature]);
+            var wkt=new ol.format.WKT();
+            var tmpGeometry=geometries[currentGeometry]["geom"].clone().transform('EPSG:3857', 'EPSG:4326');
+            console.log(wkt.writeGeometry(tmpGeometry));
+            $("input[name='"+currentGeometryField+"']").val(wkt.writeGeometry(tmpGeometry));
+        }catch(e){
+            console.log(e);
+        }
+
+    }
+}
+
+function trackStepByStepPosition(elem,ltype){
+    modalCallback=function(){
+        //$("#myModal").find(".glyphicon-ok").parent().show();
+        if(myVectorLayer)
+            myVectorLayer.getSource().clear();
+        geometries["origin"]=null;
+        setTimeout(function() { trackStepCurrentGPSPosition();}, 1000);
+        $("#myModal").find("h4").html('<span class="glyphicon glyphicon-map-marker"></span> '+window.Android.translate("gps_track"));
+        $("#myModal").find(".modal-footer").html(
+        '<button type="submit" class="btn btn-danger btn-default pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>'+
+        '<button type="submit" class="btn btn-primary btn-default pull-left" onclick="addCurrentLocation()"><span class="glyphicon glyphicon-plus"></span> Add</button>'+
+        '<button type="submit" class="btn btn-primary btn-default pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span> Save</button>'
+        );
+    };
+    currentGeometry=ltype;
+    currentGeometryField=elem;
+    geometries[ltype]["geom"]=null;
+    geometries[ltype]["cline"]=null;
+    if(!$("#map").length)
+    $.ajax({
+        method: "GET",
+        url: './map-modal.html',
+        error: function(){
+        },
+        success: function(data){
+            console.log(data);
+            $("body").append(data);
+            $("#map").css("height",($(window).height()-220)+"px");
+            $('#myModal').modal();
+            addOptionalLocalTiles(true);
+            $('#myModal').on('shown.bs.modal', function () {
+                console.log($("#mmm4me_ls").length);
+                initMapToLocation();
+                localTileIndex=map.getLayers().getLength();
+                /*geometries["origin"]=new ol.geom.Point(ol.proj.transform([position[bestIndex].lon,position[bestIndex].lat], 'EPSG:4326','EPSG:3857'));
+                setTimeout(function() { trackCurrentGPSPosition();}, 1000);*/
+                modalCallback();
+            });
+            $('#myModal').on('hide.bs.modal', function () {
+                console.log("HIDE");
+                stopTracking=true;
+            });
+        }
+    });
+    else{
+        stopTracking=false;
+        $('#myModal').modal();
+        vectorLayer1.getSource().clear();
+        updateCurrentMapLocation();
+        geometries["origin"]=null;
+        setTimeout(function() { trackStepCurrentGPSPosition();}, 1000);
+    }
+}
+/*****************************************************************************
+ * Start tracking GPS location
+ *****************************************************************************/
+function trackGPSPosition(elem,ltype){
+    modalCallback=function(){
+        //$("#myModal").find(".glyphicon-ok").parent().show();
+        if(myVectorLayer)
+            myVectorLayer.getSource().clear();
+        geometries["origin"]=new ol.geom.Point(ol.proj.transform([position[bestIndex].lon,position[bestIndex].lat], 'EPSG:4326','EPSG:3857'));
+        setTimeout(function() { trackCurrentGPSPosition();}, 1000);
+        $("#myModal").find("h4").html('<span class="glyphicon glyphicon-map-marker"></span> '+window.Android.translate("gps_track"));
+        $("#myModal").find(".modal-footer").html(
+            '<button type="submit" class="btn btn-danger btn-default pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> Cancel</button>'+
+            '<button type="submit" class="btn btn-primary btn-default pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span> Save</button>'
+        );
+    };
+    currentGeometry=ltype;
+    currentGeometryField=elem;
+    geometries[ltype]["geom"]=null;
+    geometries[ltype]["cline"]=null;
+    if(!$("#map").length)
+    $.ajax({
+        method: "GET",
+        url: './map-modal.html',
+        error: function(){
+        },
+        success: function(data){
+            console.log(data);
+            $("body").append(data);
+            $("#map").css("height",($(window).height()-220)+"px");
+            $('#myModal').modal();
+            addOptionalLocalTiles(true);
+            $('#myModal').on('shown.bs.modal', function () {
+                console.log($("#mmm4me_ls").length);
+                initMapToLocation();
+                localTileIndex=map.getLayers().getLength();
+                /*geometries["origin"]=new ol.geom.Point(ol.proj.transform([position[bestIndex].lon,position[bestIndex].lat], 'EPSG:4326','EPSG:3857'));
+                setTimeout(function() { trackCurrentGPSPosition();}, 1000);*/
+                modalCallback();
+            });
+            $('#myModal').on('hide.bs.modal', function () {
+                console.log("HIDE");
+                stopTracking=true;
+            });
+        }
+    });
+    else{
+        stopTracking=false;
+        $('#myModal').modal();
+        vectorLayer1.getSource().clear();
+        updateCurrentMapLocation();
+        geometries["origin"]=new ol.geom.Point(ol.proj.transform([position[bestIndex].lon,position[bestIndex].lat], 'EPSG:4326','EPSG:3857'));
+        setTimeout(function() { trackCurrentGPSPosition();}, 1000);
+    }
+}
+
+var hasAddedElement=0;
+var myVectorLayer=null;
+function addSelectedElement(wktString){
+    var features=[];
+        try{
+            var format = new ol.format.WKT();
+            features.push(
+                format.readFeature(wktString, {
+				    dataProjection: 'EPSG:4326',
+					featureProjection: 'EPSG:3857'
+                })
+            );
+        }catch(e){
+            console.log("Unable to parse WKT ?!"+e)
+        }
+    if(!vectorLayer1){
+        myVectorLayer = new ol.layer.Vector({
+            source: new ol.source.Vector({
+                features: features
+            }),
+            style: new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: "#3333aa",
+                    width: 1.4
+                })
+            })
+        });
+        map.addLayer(myVectorLayer);
+    }
+    else{
+        vectorLayer1.getSource().clear();
+        vectorLayer1.getSource().addFeatures(features);
+    }
+    console.log(vectorLayer1.getSource().getExtent());
+    map.updateSize();
+    map.getView().fit(vectorLayer1.getSource().getExtent(),map.getSize());
+    hasAddedElement=1;
+}
+
+/*****************************************************************************
+ * Show selected feature on map
+ *****************************************************************************/
+ var addSelectedIndex=0;
+ var mySelectedElement=null;
+function showElementOnMap(wktString){
+    mySelectedElement=wktString;
+    modalCallback=function(){
+            //$("#myModal").find(".glyphicon-ok").parent().hide();
+            if(addSelectedIndex==0){
+                updateCurrentMapLocation();
+                $("#currentPosition").html("<b>Position: "+position[bestIndex].lon.toFixed(6)+","+position[bestIndex].lat.toFixed(6)+"</b>");
+            }
+            addSelectedElement(mySelectedElement);
+            $("#myModal").find("h4").html('<span class="glyphicon glyphicon-globe"></span> '+window.Android.translate("view_feature"));
+            addSelectedIndex++;
+    };
+    //$("#currentPosition").html("<b>Position: "+position[bestIndex].lon.toFixed(6)+","+position[bestIndex].lat.toFixed(6)+"</b>");
+    if(!$("#map").length)
+    $.ajax({
+        method: "GET",
+        url: './map-modal.html',
+        error: function(){
+        },
+        success: function(data){
+            console.log(data);
+            $("body").append(data);
+            $("#map").css("height",($(window).height()-220)+"px");
+            $('#myModal').modal();
+            addOptionalLocalTiles(true);
+            $('#myModal').on('shown.bs.modal', function () {
+                console.log($("#mmm4me_ls").length);
+                initMapToLocation();
+                localTileIndex=map.getLayers().getLength();
+                modalCallback();
+            });
+            $('#myModal').on('hide.bs.modal', function () {
+                console.log("HIDE");
+                stopTracking=true;
+            });
+        }
+    });
+    else{
+        console.log("OK ");
+        $('#myModal').modal();
+        console.log("OK ");
+        vectorLayer1.getSource().clear();
+        console.log("OK ");
+        updateCurrentMapLocation();
+        console.log("OK ");
+        addSelectedElement(wktString);
+        console.log("OK ");
+    }
+
+        $("#currentPosition").html("<b>Position: "+position[bestIndex].lon.toFixed(6)+","+position[bestIndex].lat.toFixed(6)+"</b>");
+}
+
+
+/*****************************************************************************
+ * Store the current GPS location in the edit form
+ *****************************************************************************/
 function requireGPSPosition(elem){
     var position=JSON.parse(window.Android.getGPS());
     //elem=$("#"+elem);
@@ -1221,6 +2089,9 @@ function requireGPSPosition(elem){
     console.log(JSON.stringify(position));
 }
 
+/*****************************************************************************
+ * Ajax setup to ensure seting "withCredentials" to true
+ *****************************************************************************/
 function ajaxSetup(){
     $.ajaxSetup({
       xhrFields: {
@@ -1229,12 +2100,18 @@ function ajaxSetup(){
     });
 }
 
+/*****************************************************************************
+ * Get the current Network and GPS availability
+ *****************************************************************************/
 function getCurrentStatus(){
     var tmp=JSON.parse(window.Android.getGNStatus());
     tmp["gps"]=JSON.parse(tmp["gps"]);
     updateStatus(tmp['gps'],tmp['net']);
 }
 
+/*****************************************************************************
+ * Display the status icons
+ *****************************************************************************/
 function addStatusControl(){
     $('.breadcrumb').append('<span class="pull-right"><i class="glyphicon glyphicon-signal"></i> /'+
         '<span class="dropdown">'+
@@ -1260,4 +2137,230 @@ function startAudioRecord(start) {
 
 function playAudioRecord(start) {
     window.Android.playAudioRecord(start);
+
+/*****************************************************************************
+ * Initialize the map and show the current GPS location
+ *****************************************************************************/
+var localTiles;
+function initMapToLocation(){
+    if(map)
+        return;
+    var osmSource = new ol.source.OSM();
+    localTiles = new ol.source.XYZ({
+        tileLoadFunction:
+        function(imageTile, src) {
+            imageTile.getImage().src = "data:image/jpeg;base64,"+window.Android.displayTile(src);
+        },
+        attributions: [
+            ol.source.OSM.ATTRIBUTION
+        ],
+        url: "{x},{-y},{z}",
+        minZoom: 13,
+        maxZoom: 19
+    });
+
+    var tmp=JSON.parse(window.Android.getGNStatus());
+    var layers=[new ol.layer.Tile({source: localTiles})];
+    console.log(JSON.stringify(tmp));
+    if(tmp["net"])
+        layers=[new ol.layer.Tile({
+            source: osmSource
+        })];
+    map = new ol.Map({
+        layers: layers,
+        target: 'map',
+        controls: ol.control.defaults({
+            attributionOptions: /** @type {olx.control.AttributionOptions} */ ({
+		    collapsible: true
+            })
+        }),
+        view: new ol.View({
+            center: ol.proj.transform([0,0], 'EPSG:4326', 'EPSG:3857'),
+            zoom: 14,
+            maxZoom: 22,
+            minZoom: 1
+        })
+    });
+
+    var bstyle = function (feature, resolution) {
+
+        /*var iconFont = 'glyphicon';
+          var iconFontText = '\e062';*/
+        //var iconFont = 'glyphicon';
+        var iconFont = 'Glyphicons Halflings';
+        var iconFontText = '\ue062';
+        var iconSize = 24;
+        var opacity=0.4;
+        var col = 'rgba(0,255,0,0.6)';
+        if(feature.get("source")=="GPS")
+            col = 'rgba(41,136,54,0.5)';//#298836
+        else if(feature.get("source")=="Network"){
+            col = 'rgba(91,176,75,0.4)';//#5bb04b
+            iconSize = 32;
+            opacity=0.2;
+        }
+        else if(feature.get("source")=="other"){
+            col='rgba(129,208,113,0.5)';//#81d071
+            iconSize = 36;
+            opacity=0.2;
+        }
+        else
+            col='rgba(166,63,39,0.5)'; //#a63f27 //"#EE0000";
+        var styles = [];
+
+        var styleIcon = new ol.style.Style({
+            text: new ol.style.Text({
+                font: 'Normal ' + iconSize + 'px ' + iconFont,
+                text: iconFontText,
+                fill: new ol.style.Fill({ color: col })
+            })
+        });
+        styles.push(styleIcon);
+
+        //console.log(feature.get("type"));
+        return styles;
+        /*return function (feature, resolution) {
+          styles.styleIcon.getText().setText(feature.get("iconCode"));
+          return styles;
+          };*/
+    };
+    position=JSON.parse(window.Android.getFullGPS());
+    //console.log(JSON.stringify(position));
+    if(position.length==0){
+        position=[{lon:3.5,lat:43.5,source:"none"}];
+    }
+    var iconFeatures = [];
+    for(var i=0;i<position.length;i++){
+        iconFeatures.push(new ol.Feature({
+            geometry: new ol.geom.Point(ol.proj.transform([position[i].lon,position[i].lat],
+                                                          'EPSG:4326',
+                                            			  'EPSG:3857')),
+            source: position[i].source
+        }));
+        if(position[i].source=="GPS")
+            bestIndex=i;
+    }
+    var vectorSource = new ol.source.Vector({
+        features: iconFeatures //add an array of features
+    });
+    //console.log([position.lat, position.lon]);
+    //console.log(ol.proj.transform([position.lat, position.lon], 'EPSG:4326','EPSG:3857'));
+    vectorLayer = new ol.layer.Vector({
+        source: vectorSource,
+        style: bstyle
+    });
+    vectorLayer1 = new ol.layer.Vector({
+            source: new ol.source.Vector()
+    });
+    map.addLayer(vectorLayer);
+    map.addLayer(vectorLayer1);
+    //console.log(JSON.stringify(position));
+    map.getView().setCenter(ol.proj.transform([position[bestIndex].lon,position[bestIndex].lat], 'EPSG:4326', 'EPSG:3857'));
+    //console.log(ol.proj.transform([position[bestIndex].lon,position[bestIndex].lat], 'EPSG:4326', 'EPSG:3857'));
+    //console.log(JSON.stringify(position));
+}
+
+/*****************************************************************************
+ * Update the current loction of the map depending on the GPS location
+ *****************************************************************************/
+var bestIndex=0;
+function updateCurrentMapLocation(){
+    position=JSON.parse(window.Android.getFullGPS());
+    console.log(JSON.stringify(position));
+    if(position.length==0){
+        position=[{lon:3.5,lat:43.5,source:"none"}];
+    }
+    var iconFeatures = [];
+    for(var i=0;i<position.length;i++){
+        iconFeatures.push(new ol.Feature({
+            geometry: new ol.geom.Point(ol.proj.transform([position[i].lon,position[i].lat], 'EPSG:4326',
+							  'EPSG:3857')),
+            source: position[i].source
+        }));
+        if(position[i].source=="GPS")
+            bestIndex=i;
+    }
+    vectorLayer.getSource().clear();
+    vectorLayer.getSource().addFeatures(iconFeatures);
+    map.getView().setCenter(ol.proj.transform([position[bestIndex].lon,position[bestIndex].lat], 'EPSG:4326', 'EPSG:3857'))
+}
+
+
+/*****************************************************************************
+ * Display a dropdown that let user add their local tiles on top of OSMs
+ *****************************************************************************/
+var localTileIndex=0;
+function addOptionalLocalTiles(shouldFixPosition){
+    var tmp=JSON.parse(window.Android.getGNStatus());
+    if(tmp["net"]){
+        $.ajax({
+            method: "GET",
+            url: 'content/layer_switcher.html',
+            success: function(data){
+                if(MM4ME_DEBUG)
+                    console.log('Display warning message on the UI !');
+                $(".map").prepend(data);
+                if(shouldFixPosition)
+                    $("#mm4me_ls").css("margin-bottom","25px");
+
+                $(".map").parent().find("input[type=range]").first().on('change',function(){
+                    console.log("change to "+$(this).val());
+                    map.getLayers().item(localTileIndex).setOpacity($(this).val()/100);
+                });
+                $(".map").parent().find("input[type=checkbox]").parent().on('click',function(){
+                    var tmp=$(this).find("input[type=checkbox]");
+                    if(tmp.is(":checked"))
+                        $(this).find("input[type=checkbox]").prop("checked",false).change();
+                    else
+                        $(this).find("input[type=checkbox]").prop("checked",true).change();
+                });
+                $("#layerSwitcherCheck").on('change',function(){
+                    if($(this).parent().find("i").hasClass("glyphicon-eye-open")){
+                        $("#dmopacity").hide();
+                        $(this).parent().find("i").removeClass("glyphicon-eye-open").addClass("glyphicon-eye-close");
+                        if(map.getLayers().getLength()>=4)
+                            map.getLayers().item(localTileIndex).setVisible(false);
+                    }else{
+                        $(this).parent().find("i").removeClass("glyphicon-eye-close").addClass("glyphicon-eye-open");
+                        $("#dmopacity").show();
+                        console.log(JSON.stringify(map.getLayers().getLength()));
+                        if(map.getLayers().getLength()<localTileIndex+1){
+                            //map.addLayer(new ol.layer.Tile({source: localTiles}));
+                            var myTileLayer=new ol.layer.Tile({source: localTiles});
+                            var layers = map.getLayers();
+                            layers.insertAt(1,myTileLayer);
+                            //var myTileLayer=map.getLayers()[map.getLayers().getLength()-1];
+                            //map.raiseLayer(myTileLaye, 1);
+                            //map.setLayerIndex(myTileLayer,1);
+                            //map.redraw();
+                            localTileIndex=1;
+                        }
+                        else
+                            map.getLayers().item(localTileIndex).setVisible(true);
+                    }
+
+                });
+            },
+            error: function(){
+                alert("error fetching noserver.html file!");
+            }
+        });
+    }
+}
+
+var oldBearer=0;
+function reactOrientation(direction){
+    if(map){
+        if($("#followNorth").is(":checked"))
+            window.Android.startReportDirection();
+        else
+            window.Android.stopReportDirection();
+        //console.log("******* ----- p "+oldBearer+" d "+direction+" diff "+(oldBearer-direction));
+        if($("#followNorth").is(":checked") && (oldBearer-direction)<-0.05 || (oldBearer-direction)>0.05){
+            map.getView().setRotation(-direction);
+            oldBearer=direction;
+        }
+    }else{
+        window.Android.stopReportDirection();
+    }
 }
